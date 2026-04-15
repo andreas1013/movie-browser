@@ -8,602 +8,581 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #06070b;
-      --panel: rgba(255,255,255,0.07);
-      --panel-hi: rgba(255,255,255,0.12);
-      --border: rgba(255,255,255,0.10);
-      --border-hi: rgba(255,255,255,0.35);
-      --text: rgba(255,255,255,0.96);
-      --text-2: rgba(255,255,255,0.72);
-      --text-3: rgba(255,255,255,0.42);
-      --gold: #ffd54a;
-      --accent: #8ab4ff;
-      --shadow: 0 30px 80px rgba(0,0,0,0.65);
-      --row-pad: 56px;
-      --card-w: 360px;
-      --card-gap: 18px;
-      --radius: 16px;
-      --nav-h: 72px;
+    :root{
+      --bg:#06070b;
+      --panel:rgba(255,255,255,.07);
+      --panel-hi:rgba(255,255,255,.12);
+      --border:rgba(255,255,255,.10);
+      --border-hi:rgba(255,255,255,.32);
+      --text:rgba(255,255,255,.96);
+      --text-2:rgba(255,255,255,.72);
+      --text-3:rgba(255,255,255,.42);
+      --gold:#ffd54a;
+      --row-pad:56px;
+      --card-w:360px;
+      --card-gap:18px;
+      --radius:16px;
+      --nav-h:72px;
     }
 
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
-    body {
-      font-family: "DM Sans", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      overflow-y: auto;
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:"DM Sans",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+      overflow-y:auto;
     }
 
-    body::-webkit-scrollbar,
-    #detail-body::-webkit-scrollbar {
-      width: 0;
-      height: 0;
+    #bg,#bg-next{
+      position:fixed;
+      inset:-80px;
+      background-size:cover;
+      background-position:center;
+      transform:scale(1.12);
+      filter:blur(80px) saturate(1.2) brightness(.26);
+      z-index:0;
     }
 
-    #bg,
-    #bg-next {
-      position: fixed;
-      inset: -80px;
-      background-size: cover;
-      background-position: center;
-      transform: scale(1.12);
-      filter: blur(80px) saturate(1.25) brightness(0.28);
-      z-index: 0;
+    #bg-next{
+      opacity:0;
+      transition:opacity .8s ease;
     }
 
-    #bg-next {
-      opacity: 0;
-      transition: opacity 700ms ease;
-    }
-
-    #bg-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
+    #bg-overlay{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      pointer-events:none;
       background:
-        radial-gradient(ellipse 85% 55% at 50% 0%, rgba(20,24,34,0.20), rgba(6,7,11,0.92)),
-        linear-gradient(to bottom, rgba(6,7,11,0.40), rgba(6,7,11,0.70) 35%, rgba(6,7,11,1) 100%);
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      opacity: 0.025;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        radial-gradient(ellipse 85% 55% at 50% 0%, rgba(20,24,34,.18), rgba(6,7,11,.92)),
+        linear-gradient(to bottom, rgba(6,7,11,.35), rgba(6,7,11,.65) 35%, rgba(6,7,11,1) 100%);
+    }
+
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      z-index:2;
+      pointer-events:none;
+      opacity:.02;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    #app{position:relative;z-index:5;min-height:100vh}
+
+    #nav{
+      position:sticky;
+      top:0;
+      z-index:30;
+      height:var(--nav-h);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 var(--row-pad);
+      background:rgba(6,7,11,.55);
+      backdrop-filter:blur(24px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .brand{
+      font-size:28px;
+      font-weight:700;
+      letter-spacing:-.03em;
+    }
+    .brand span{
+      color:var(--text-3);
+      font-weight:400;
+    }
+
+    .nav-help{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      color:var(--text-3);
+      font-size:12px;
+    }
+
+    .key{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+    }
+
+    .key b{
+      display:inline-block;
+      min-width:24px;
+      padding:3px 7px;
+      border-radius:8px;
+      background:rgba(255,255,255,.08);
+      color:var(--text-2);
+      font-weight:700;
+      text-align:center;
+    }
+
+    #hero{
+      position:relative;
+      min-height:72vh;
+      display:flex;
+      align-items:end;
+      padding:40px var(--row-pad) 48px;
+      overflow:hidden;
+    }
+
+    #hero-image{
+      position:absolute;
+      inset:0;
+      background-size:cover;
+      background-position:center;
+      opacity:.33;
+      transform:scale(1.03);
+      transition:background-image .4s ease, opacity .4s ease;
+    }
+
+    #hero-image::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(to right, rgba(6,7,11,.88) 0%, rgba(6,7,11,.55) 38%, rgba(6,7,11,.20) 68%, rgba(6,7,11,.65) 100%),
+        linear-gradient(to top, rgba(6,7,11,1) 0%, rgba(6,7,11,.45) 45%, rgba(6,7,11,.2) 100%);
+    }
+
+    #hero-content{
+      position:relative;
+      z-index:2;
+      width:min(900px,100%);
     }
-
-    #app {
-      position: relative;
-      z-index: 5;
-      min-height: 100vh;
-    }
-
-    #nav {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      height: var(--nav-h);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 var(--row-pad);
-      background: rgba(6,7,11,0.55);
-      backdrop-filter: blur(24px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .brand {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-    }
-
-    .brand span {
-      color: var(--text-3);
-      font-weight: 400;
-    }
-
-    .nav-help {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      color: var(--text-3);
-      font-size: 12px;
-    }
-
-    .key {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .key b {
-      display: inline-block;
-      min-width: 24px;
-      padding: 3px 7px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.08);
-      color: var(--text-2);
-      font-weight: 700;
-      text-align: center;
-    }
-
-    #hero {
-      min-height: 72vh;
-      display: flex;
-      align-items: end;
-      padding: 40px var(--row-pad) 48px;
-    }
-
-    #hero-content {
-      width: min(900px, 100%);
-    }
-
-    .eyebrow {
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-size: 12px;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .eyebrow::before {
-      content: "";
-      display: inline-block;
-      width: 28px;
-      height: 1px;
-      background: rgba(255,255,255,0.22);
-    }
-
-    #hero-title {
-      font-size: clamp(42px, 6vw, 86px);
-      line-height: 0.94;
-      letter-spacing: -0.045em;
-      margin: 0 0 20px;
-      text-shadow: 0 8px 40px rgba(0,0,0,0.45);
-    }
-
-    #hero-sub {
-      color: var(--text-2);
-      font-size: clamp(17px, 1.8vw, 21px);
-      line-height: 1.55;
-      max-width: 760px;
-      margin-bottom: 22px;
-    }
-
-    #hero-meta,
-    #hero-tags {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    #hero-meta {
-      margin-bottom: 14px;
-    }
-
-    #hero-tags {
-      margin-bottom: 22px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.10);
-      color: var(--text-2);
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .pill.gold {
-      color: var(--gold);
-      border-color: rgba(255,213,74,0.25);
-      background: rgba(255,213,74,0.07);
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
-    .btn {
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.08);
-      color: var(--text);
-      padding: 14px 18px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
-    }
-
-    .btn:hover,
-    .btn:focus-visible {
-      transform: translateY(-1px);
-      border-color: rgba(255,255,255,0.28);
-      background: rgba(255,255,255,0.13);
-      outline: none;
-    }
-
-    .btn.primary {
-      background: rgba(255,255,255,0.95);
-      color: #0c0e14;
-    }
-
-    #rows {
-      padding-bottom: 80px;
-    }
-
-    .row {
-      margin-bottom: 14px;
-    }
-
-    .row-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 0 var(--row-pad) 16px;
-    }
-
-    .row-title {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      color: var(--text-2);
-      transition: color 180ms ease;
-    }
-
-    .row.active .row-title {
-      color: var(--text);
-    }
-
-    .row-line {
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.08);
-    }
-
-    .row-track-outer {
-      position: relative;
-    }
-
-    .row-track-outer::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 140px;
-      pointer-events: none;
-      background: linear-gradient(to right, transparent, rgba(6,7,11,0.92));
-    }
-
-    .row-wrap {
-      overflow: hidden;
-      padding: 4px var(--row-pad) 30px;
-    }
-
-    .row-track {
-      display: flex;
-      gap: var(--card-gap);
-      will-change: transform;
-      transition: transform 320ms cubic-bezier(.2,.8,.2,1);
-    }
-
-    .card {
-      position: relative;
-      width: var(--card-w);
-      flex: 0 0 var(--card-w);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: 0 18px 44px rgba(0,0,0,0.22);
-      transform: scale(1);
-      transition:
-        transform 220ms ease,
-        border-color 220ms ease,
-        background 220ms ease,
-        box-shadow 220ms ease,
-        opacity 220ms ease;
-    }
-
-    .row.active .card:not(.focused) {
-      opacity: 0.74;
-    }
 
-    .card.focused {
-      transform: scale(1.08) translateY(-8px);
-      border-color: var(--border-hi);
-      background: var(--panel-hi);
-      box-shadow: var(--shadow);
-      z-index: 2;
+    .eyebrow{
+      color:var(--text-3);
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      font-size:12px;
+      margin-bottom:18px;
+      display:flex;
+      align-items:center;
+      gap:12px;
     }
-
-    .card-image-wrap {
-      position: relative;
-      aspect-ratio: 16 / 9;
-      background: rgba(255,255,255,0.04);
-    }
-
-    .card-image-wrap::after {
-      content: "";
-      position: absolute;
-      inset: auto 0 0 0;
-      height: 50%;
-      background: linear-gradient(to bottom, transparent, rgba(10,12,18,0.88));
-      pointer-events: none;
-    }
-
-    .card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .card-body {
-      padding: 14px 16px 16px;
-    }
-
-    .card-title {
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 8px;
-    }
-
-    .card-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--text-3);
-      font-size: 13px;
-      margin-bottom: 10px;
+
+    .eyebrow::before{
+      content:"";
+      display:inline-block;
+      width:28px;
+      height:1px;
+      background:rgba(255,255,255,.22);
     }
 
-    .card-reason {
-      font-size: 13px;
-      line-height: 1.45;
-      color: var(--text-2);
-      min-height: 38px;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
+    #hero-title{
+      font-size:clamp(42px,6vw,86px);
+      line-height:.94;
+      letter-spacing:-.045em;
+      margin:0 0 20px;
+      text-shadow:0 8px 40px rgba(0,0,0,.45);
     }
-
-    .card-rating {
-      color: var(--gold);
-      font-weight: 700;
-    }
-
-    .loading,
-    .error {
-      padding: 0 var(--row-pad);
-      color: var(--text-3);
-      font-size: 15px;
+
+    #hero-sub{
+      color:var(--text-2);
+      font-size:clamp(17px,1.8vw,21px);
+      line-height:1.55;
+      max-width:760px;
+      margin-bottom:22px;
     }
-
-    #detail {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      pointer-events: none;
-      background: rgba(3,4,8,0);
-      backdrop-filter: blur(0px);
-      transition: background 220ms ease, backdrop-filter 220ms ease;
+
+    #hero-meta,#hero-tags{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
-    #detail.open {
-      pointer-events: all;
-      background: rgba(3,4,8,0.78);
-      backdrop-filter: blur(10px);
-    }
+    #hero-meta{margin-bottom:14px}
+    #hero-tags{margin-bottom:22px}
 
-    #detail-panel {
-      position: absolute;
-      inset: 5vh 4vw;
-      border-radius: 24px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(10,12,18,0.92);
-      box-shadow: 0 50px 130px rgba(0,0,0,0.65);
-      transform: translateY(16px) scale(0.98);
-      opacity: 0;
-      transition: transform 220ms ease, opacity 220ms ease;
-      display: flex;
-      flex-direction: column;
-    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--text-2);
+      font-size:14px;
+      font-weight:500;
+    }
 
-    #detail.open #detail-panel {
-      transform: translateY(0) scale(1);
-      opacity: 1;
+    .pill.gold{
+      color:var(--gold);
+      border-color:rgba(255,213,74,.25);
+      background:rgba(255,213,74,.07);
     }
-
-    #detail-backdrop-wrap {
-      position: relative;
-      aspect-ratio: 21/8;
-      flex-shrink: 0;
-      background: rgba(255,255,255,0.04);
+
+    .hero-actions{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:18px;
     }
 
-    #detail-backdrop-wrap::after {
-      content: "";
-      position: absolute;
-      inset: auto 0 0 0;
-      height: 70%;
-      background: linear-gradient(to bottom, transparent, rgba(10,12,18,0.98));
-      pointer-events: none;
+    .btn{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.08);
+      color:var(--text);
+      padding:14px 18px;
+      border-radius:12px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform 140ms ease,border-color 140ms ease,background 140ms ease;
     }
 
-    #detail-backdrop {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
+    .btn:hover,.btn:focus-visible{
+      transform:translateY(-1px);
+      border-color:rgba(255,255,255,.28);
+      background:rgba(255,255,255,.13);
+      outline:none;
     }
 
-    #detail-close {
-      position: absolute;
-      top: 18px;
-      right: 18px;
-      z-index: 2;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(0,0,0,0.35);
-      color: white;
-      font-size: 22px;
-      cursor: pointer;
+    .btn.primary{
+      background:rgba(255,255,255,.95);
+      color:#0c0e14;
     }
 
-    #detail-body {
-      overflow-y: auto;
-      padding: 26px 34px 38px;
-    }
+    #rows{padding-bottom:80px}
 
-    #detail-title {
-      font-size: clamp(30px, 4vw, 52px);
-      line-height: 1;
-      letter-spacing: -0.04em;
-      margin: 0 0 10px;
+    .row{margin-bottom:14px}
+    .row-header{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:0 var(--row-pad) 16px;
     }
 
-    #detail-tagline {
-      color: var(--text-3);
-      font-size: 17px;
-      font-style: italic;
-      margin-bottom: 18px;
+    .row-title{
+      font-size:24px;
+      font-weight:700;
+      letter-spacing:-.03em;
+      color:var(--text-2);
+      transition:color 180ms ease;
     }
 
-    #detail-pills {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
+    .row.active .row-title{color:var(--text)}
+    .row-line{
+      flex:1;
+      height:1px;
+      background:rgba(255,255,255,.08);
+    }
+
+    .row-track-outer{position:relative}
+    .row-track-outer::after{
+      content:"";
+      position:absolute;
+      top:0;
+      right:0;
+      bottom:0;
+      width:140px;
+      pointer-events:none;
+      background:linear-gradient(to right, transparent, rgba(6,7,11,.92));
     }
 
-    #detail-reasons {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 28px;
+    .row-wrap{
+      overflow:hidden;
+      padding:4px var(--row-pad) 30px;
+    }
+
+    .row-track{
+      display:flex;
+      gap:var(--card-gap);
+      will-change:transform;
+      transition:transform .5s cubic-bezier(.2,.7,.2,1);
     }
+
+    .card{
+      position:relative;
+      width:var(--card-w);
+      flex:0 0 var(--card-w);
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      overflow:hidden;
+      box-shadow:0 18px 44px rgba(0,0,0,.22);
+      transform:scale(1);
+      transition:transform .22s ease,border-color .22s ease,background .22s ease,box-shadow .22s ease,opacity .22s ease;
+    }
+
+    .row.active .card:not(.focused){opacity:.78}
+
+    .card.focused{
+      transform:scale(1.06) translateY(-6px);
+      border-color:var(--border-hi);
+      background:var(--panel-hi);
+      box-shadow:0 28px 70px rgba(0,0,0,.45);
+      z-index:2;
+    }
 
-    .reason-box {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      padding: 15px 16px;
-    }
+    .card-image-wrap{
+      position:relative;
+      aspect-ratio:16/9;
+      background:rgba(255,255,255,.04);
+    }
+
+    .card-image-wrap::after{
+      content:"";
+      position:absolute;
+      inset:auto 0 0 0;
+      height:50%;
+      background:linear-gradient(to bottom, transparent, rgba(10,12,18,.88));
+      pointer-events:none;
+    }
+
+    .card img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .card-body{padding:14px 16px 16px}
 
-    .reason-box .label {
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 10px;
-      margin-bottom: 8px;
+    .card-title{
+      font-size:17px;
+      font-weight:700;
+      letter-spacing:-.02em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin-bottom:8px;
+    }
+
+    .card-meta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      color:var(--text-3);
+      font-size:13px;
+      margin-bottom:10px;
+    }
+
+    .card-reason{
+      font-size:13px;
+      line-height:1.45;
+      color:var(--text-2);
+      min-height:38px;
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:2;
+      overflow:hidden;
+    }
+
+    .card-rating{color:var(--gold);font-weight:700}
+
+    .loading,.error{
+      padding:0 var(--row-pad);
+      color:var(--text-3);
+      font-size:15px;
+    }
+
+    #detail{
+      position:fixed;
+      inset:0;
+      z-index:100;
+      pointer-events:none;
+      background:rgba(3,4,8,0);
+      backdrop-filter:blur(0);
+      transition:background .22s ease,backdrop-filter .22s ease;
     }
-
-    .reason-box .value {
-      color: var(--text);
-      font-size: 15px;
-      line-height: 1.45;
+
+    #detail.open{
+      pointer-events:all;
+      background:rgba(3,4,8,.78);
+      backdrop-filter:blur(10px);
     }
 
-    #detail-overview {
-      color: var(--text-2);
-      line-height: 1.75;
-      font-size: 16px;
-      margin-bottom: 26px;
+    #detail-panel{
+      position:absolute;
+      inset:5vh 4vw;
+      border-radius:24px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(10,12,18,.92);
+      box-shadow:0 50px 130px rgba(0,0,0,.65);
+      transform:translateY(16px) scale(.98);
+      opacity:0;
+      transition:transform .22s ease,opacity .22s ease;
+      display:flex;
+      flex-direction:column;
     }
 
-    #detail-cast-title {
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 12px;
-      margin-bottom: 12px;
+    #detail.open #detail-panel{
+      transform:translateY(0) scale(1);
+      opacity:1;
     }
 
-    #detail-cast {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+    #detail-backdrop-wrap{
+      position:relative;
+      aspect-ratio:21/8;
+      flex-shrink:0;
+      background:rgba(255,255,255,.04);
     }
 
-    .cast-chip {
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: var(--text-2);
-      font-size: 14px;
+    #detail-backdrop-wrap::after{
+      content:"";
+      position:absolute;
+      inset:auto 0 0 0;
+      height:70%;
+      background:linear-gradient(to bottom, transparent, rgba(10,12,18,.98));
+      pointer-events:none;
     }
 
-    #toast {
-      position: fixed;
-      left: 50%;
-      bottom: 22px;
-      transform: translateX(-50%) translateY(16px);
-      z-index: 120;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.14);
-      backdrop-filter: blur(18px);
-      color: var(--text);
-      padding: 12px 16px;
-      border-radius: 12px;
-      opacity: 0;
-      transition: opacity 180ms ease, transform 180ms ease;
-      pointer-events: none;
+    #detail-backdrop{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
 
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    #detail-close{
+      position:absolute;
+      top:18px;
+      right:18px;
+      z-index:2;
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.35);
+      color:white;
+      font-size:22px;
+      cursor:pointer;
     }
-
-    @media (max-width: 920px) {
-      :root {
-        --row-pad: 24px;
-        --card-w: 280px;
-        --card-gap: 14px;
+
+    #detail-body{
+      overflow-y:auto;
+      padding:26px 34px 38px;
+    }
+
+    #detail-title{
+      font-size:clamp(30px,4vw,52px);
+      line-height:1;
+      letter-spacing:-.04em;
+      margin:0 0 10px;
+    }
+
+    #detail-tagline{
+      color:var(--text-3);
+      font-size:17px;
+      font-style:italic;
+      margin-bottom:18px;
+    }
+
+    #detail-pills{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:24px;
+    }
+
+    #detail-actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+
+    #detail-reasons{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      margin-bottom:28px;
+    }
+
+    .reason-box{
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      padding:15px 16px;
+    }
+
+    .reason-box .label{
+      color:var(--text-3);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:10px;
+      margin-bottom:8px;
+    }
+
+    .reason-box .value{
+      color:var(--text);
+      font-size:15px;
+      line-height:1.45;
+    }
+
+    #detail-overview{
+      color:var(--text-2);
+      line-height:1.75;
+      font-size:16px;
+      margin-bottom:26px;
+    }
+
+    #detail-cast-title{
+      color:var(--text-3);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:12px;
+      margin-bottom:12px;
+    }
+
+    #detail-cast{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .cast-chip{
+      padding:10px 12px;
+      border-radius:12px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--text-2);
+      font-size:14px;
+    }
+
+    #toast{
+      position:fixed;
+      left:50%;
+      bottom:22px;
+      transform:translateX(-50%) translateY(16px);
+      z-index:120;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter:blur(18px);
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:12px;
+      opacity:0;
+      transition:opacity .18s ease,transform .18s ease;
+      pointer-events:none;
+    }
+
+    #toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @media (max-width:920px){
+      :root{
+        --row-pad:24px;
+        --card-w:280px;
+        --card-gap:14px;
       }
-
-      .nav-help {
-        display: none;
-      }
-
-      #detail-reasons {
-        grid-template-columns: 1fr;
-      }
+      .nav-help{display:none}
+      #detail-reasons{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -624,6 +603,7 @@
     </nav>
 
     <section id="hero">
+      <div id="hero-image"></div>
       <div id="hero-content">
         <div class="eyebrow" id="hero-eyebrow">Best pick for tonight</div>
         <h1 id="hero-title">Loading movies...</h1>
@@ -633,6 +613,7 @@
         <div class="hero-actions">
           <button class="btn primary" id="hero-open">Open details</button>
           <button class="btn" id="hero-next">Next suggestion</button>
+          <button class="btn" id="hero-trailer" style="display:none;">Watch trailer</button>
         </div>
       </div>
     </section>
@@ -651,6 +632,9 @@
         <h2 id="detail-title"></h2>
         <div id="detail-tagline"></div>
         <div id="detail-pills"></div>
+        <div id="detail-actions">
+          <button class="btn" id="detail-trailer" style="display:none;">Watch trailer</button>
+        </div>
 
         <div id="detail-reasons">
           <div class="reason-box">
@@ -683,44 +667,23 @@
     const BACK = (p, size = "w1280") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
 
     const LANES = [
-      {
-        key: "tonight",
-        title: "Best pick for tonight",
-        subtitle: "Confident, broad-appeal choices for an easy start",
-        reason: "A strong all-round recommendation for a relaxed evening."
-      },
-      {
-        key: "short",
-        title: "Under 100 minutes",
-        subtitle: "High-value films when you want something tighter",
-        reason: "A shorter commitment without feeling slight."
-      },
-      {
-        key: "beautiful",
-        title: "Slow and beautiful",
-        subtitle: "Atmospheric, emotional, and visually absorbing picks",
-        reason: "Better for a patient, immersive mood."
-      },
-      {
-        key: "thrill",
-        title: "High-stakes thrill",
-        subtitle: "Tension, pace, and urgency for a more intense night",
-        reason: "Ideal when you want energy and momentum."
-      }
+      { key: "tonight", title: "Best pick for tonight", subtitle: "Confident, broad-appeal choices for an easy start" },
+      { key: "short", title: "Under 100 minutes", subtitle: "High-value films when you want something tighter" },
+      { key: "beautiful", title: "Slow and beautiful", subtitle: "Atmospheric, emotional, and visually absorbing picks" },
+      { key: "thrill", title: "High-stakes thrill", subtitle: "Tension, pace, and urgency for a more intense night" }
     ];
 
     let rows = [];
     let focusedRow = 0;
     let focusedCol = {};
     let detailOpen = false;
-    let heroMovie = null;
-    let heroLaneTitle = "";
     let ambientUrl = "";
+    let currentHeroTrailer = null;
+    let currentDetailTrailer = null;
 
     const rowsEl = document.getElementById("rows");
     const statusEl = document.getElementById("status");
     const toastEl = document.getElementById("toast");
-
     const bg = document.getElementById("bg");
     const bgNext = document.getElementById("bg-next");
 
@@ -739,7 +702,12 @@
       setTimeout(() => {
         bg.style.backgroundImage = `url("${url}")`;
         bgNext.style.opacity = "0";
-      }, 650);
+      }, 700);
+    }
+
+    function setHeroImage(url) {
+      if (!url) return;
+      document.getElementById("hero-image").style.backgroundImage = `url("${url}")`;
     }
 
     function safeYear(movie) {
@@ -755,7 +723,7 @@
       return movie.vote_average ? `★ ${movie.vote_average.toFixed(1)}` : "★ —";
     }
 
-    function makeReasonText(lane, movie) {
+    function makeReasonText(lane) {
       if (lane.key === "short") return "Short, efficient, and still highly watchable.";
       if (lane.key === "beautiful") return "Best when you want mood, texture, and atmosphere.";
       if (lane.key === "thrill") return "Fast, tense, and built for momentum.";
@@ -776,22 +744,36 @@
       return "Longer sit-down feature.";
     }
 
+    function pickTrailer(movie) {
+      const vids = movie && movie.videos && Array.isArray(movie.videos.results) ? movie.videos.results : [];
+      const best = vids.find(v => v.site === "YouTube" && v.type === "Trailer") ||
+                   vids.find(v => v.site === "YouTube" && v.type === "Teaser") ||
+                   vids.find(v => v.site === "YouTube");
+      return best ? `https://www.youtube.com/watch?v=${best.key}` : null;
+    }
+
     async function api(path) {
       const res = await fetch(`${API_BASE}${path}`);
-      if (!res.ok) {
-        throw new Error(`API error ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`API error ${res.status}`);
       return res.json();
     }
 
-    async function fetchLane(lane) {
-      const data = await api(`/api/browse?intent=${encodeURIComponent(lane.key)}`);
-      const results = Array.isArray(data.results) ? data.results.filter(m => m && (m.backdrop_path || m.poster_path)) : [];
-      return results.slice(0, 18);
+    async function fetchLanePage(laneKey, page = 1) {
+      const data = await api(`/api/browse?intent=${encodeURIComponent(laneKey)}&page=${page}`);
+      return Array.isArray(data.results) ? data.results.filter(m => m && (m.backdrop_path || m.poster_path)) : [];
     }
 
     async function fetchMovie(id) {
       return api(`/api/movie?id=${encodeURIComponent(id)}`);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
     }
 
     function buildCard(movie, lane, rowIndex, colIndex) {
@@ -800,9 +782,7 @@
       card.dataset.row = rowIndex;
       card.dataset.col = colIndex;
 
-      const image = movie.backdrop_path
-        ? IMG(movie.backdrop_path, "w780")
-        : IMG(movie.poster_path, "w500");
+      const image = movie.backdrop_path ? IMG(movie.backdrop_path, "w780") : IMG(movie.poster_path, "w500");
 
       card.innerHTML = `
         <div class="card-image-wrap">
@@ -814,7 +794,7 @@
             <span>${safeYear(movie)}</span>
             <span class="card-rating">${voteText(movie)}</span>
           </div>
-          <div class="card-reason">${escapeHtml(makeReasonText(lane, movie))}</div>
+          <div class="card-reason">${escapeHtml(makeReasonText(lane))}</div>
         </div>
       `;
 
@@ -863,15 +843,16 @@
       outer.appendChild(wrap);
       section.appendChild(header);
       section.appendChild(outer);
-
       rowsEl.appendChild(section);
 
       return {
         lane,
-        movies,
+        movies: [...movies],
         section,
         wrap,
-        track
+        track,
+        page: 1,
+        loadingMore: false
       };
     }
 
@@ -880,6 +861,36 @@
       if (!row) return null;
       const col = Math.max(0, Math.min(focusedCol[focusedRow] || 0, row.movies.length - 1));
       return row.movies[col] || null;
+    }
+
+    async function maybeLoadMore(rowIndex) {
+      const row = rows[rowIndex];
+      if (!row || row.loadingMore) return;
+
+      const col = focusedCol[rowIndex] || 0;
+      if (col < row.movies.length - 5) return;
+
+      row.loadingMore = true;
+
+      try {
+        const nextPage = row.page + 1;
+        const more = await fetchLanePage(row.lane.key, nextPage);
+        const existing = new Set(row.movies.map(m => m.id));
+        const fresh = more.filter(m => !existing.has(m.id));
+
+        if (fresh.length) {
+          const start = row.movies.length;
+          row.movies.push(...fresh);
+          fresh.forEach((movie, i) => {
+            row.track.appendChild(buildCard(movie, row.lane, rowIndex, start + i));
+          });
+          row.page = nextPage;
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        row.loadingMore = false;
+      }
     }
 
     function applyFocus(scrollIntoView = true) {
@@ -901,29 +912,55 @@
       row.section.classList.add("active");
       card.classList.add("focused");
 
-      const cardWidth = card.getBoundingClientRect().width + parseInt(getComputedStyle(row.track).gap || 18, 10);
-      const wrapWidth = row.wrap.clientWidth;
-      const targetX = Math.max(0, col * cardWidth - (wrapWidth / 2) + (card.getBoundingClientRect().width / 2));
-      row.track.style.transform = `translateX(-${targetX}px)`;
+      const cardLeft = card.offsetLeft;
+      const cardRight = cardLeft + card.offsetWidth;
+      const currentShift = getCurrentTranslateX(row.track);
+      const visibleLeft = -currentShift;
+      const visibleRight = visibleLeft + row.wrap.clientWidth;
+
+      const leftMargin = 140;
+      const rightMargin = 220;
+      let newShift = currentShift;
+
+      if (cardLeft < visibleLeft + leftMargin) {
+        newShift = -(cardLeft - leftMargin);
+      } else if (cardRight > visibleRight - rightMargin) {
+        newShift = -(cardRight - row.wrap.clientWidth + rightMargin);
+      }
+
+      const maxShift = -(row.track.scrollWidth - row.wrap.clientWidth);
+      if (row.track.scrollWidth <= row.wrap.clientWidth) {
+        newShift = 0;
+      } else {
+        newShift = Math.max(maxShift, Math.min(0, newShift));
+      }
+
+      row.track.style.transform = `translateX(${newShift}px)`;
 
       if (scrollIntoView) {
         row.section.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
       const movie = currentMovie();
-      if (movie) {
-        updateHero(movie, row.lane);
-      }
+      if (movie) updateHero(movie, row.lane);
+
+      maybeLoadMore(focusedRow);
     }
 
-    function updateHero(movie, lane) {
-      heroMovie = movie;
-      heroLaneTitle = lane.title;
+    function getCurrentTranslateX(el) {
+      const style = getComputedStyle(el);
+      const matrix = style.transform || style.webkitTransform || "none";
+      if (matrix === "none") return 0;
+      const values = matrix.match(/matrix.*\((.+)\)/);
+      if (!values) return 0;
+      const parts = values[1].split(", ");
+      return parseFloat(parts[4]) || 0;
+    }
 
+    async function updateHero(movie, lane) {
       document.getElementById("hero-eyebrow").textContent = lane.title;
       document.getElementById("hero-title").textContent = movie.title || "Untitled";
-      document.getElementById("hero-sub").textContent =
-        movie.overview || lane.subtitle || "A curated recommendation for this lane.";
+      document.getElementById("hero-sub").textContent = movie.overview || lane.subtitle;
 
       document.getElementById("hero-meta").innerHTML = `
         <span class="pill gold">${voteText(movie)}</span>
@@ -932,12 +969,30 @@
       `;
 
       document.getElementById("hero-tags").innerHTML = `
-        <span class="pill">${makeReasonText(lane, movie)}</span>
+        <span class="pill">${makeReasonText(lane)}</span>
         <span class="pill">${bestForText(lane)}</span>
       `;
 
-      const bgUrl = BACK(movie.backdrop_path || movie.poster_path, "w1280");
-      if (bgUrl) setAmbient(bgUrl);
+      const backPath = movie.backdrop_path || movie.poster_path;
+      if (backPath) {
+        const bgUrl = BACK(backPath, "w1280");
+        setAmbient(bgUrl);
+        setHeroImage(bgUrl);
+      }
+
+      currentHeroTrailer = null;
+      document.getElementById("hero-trailer").style.display = "none";
+
+      try {
+        const full = await fetchMovie(movie.id);
+        const trailer = pickTrailer(full);
+        if (trailer) {
+          currentHeroTrailer = trailer;
+          document.getElementById("hero-trailer").style.display = "inline-flex";
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     async function openDetailFromFocus() {
@@ -955,6 +1010,8 @@
         document.getElementById("detail-overview").textContent = "";
         document.getElementById("detail-cast").innerHTML = "";
         document.getElementById("detail-backdrop").src = "";
+        document.getElementById("detail-trailer").style.display = "none";
+        currentDetailTrailer = null;
 
         const full = await fetchMovie(movie.id);
 
@@ -967,21 +1024,25 @@
           <span class="pill">${full.vote_count ? `${full.vote_count.toLocaleString()} votes` : "Votes unavailable"}</span>
         `;
 
-        document.getElementById("reason-fit").textContent = makeReasonText(row.lane, full);
+        document.getElementById("reason-fit").textContent = makeReasonText(row.lane);
         document.getElementById("reason-bestfor").textContent = bestForText(row.lane);
         document.getElementById("reason-commit").textContent = commitmentText(full);
-
-        document.getElementById("detail-overview").textContent =
-          full.overview || "No synopsis available.";
+        document.getElementById("detail-overview").textContent = full.overview || "No synopsis available.";
 
         const cast = (full.credits && Array.isArray(full.credits.cast)) ? full.credits.cast.slice(0, 8) : [];
         document.getElementById("detail-cast").innerHTML = cast.length
           ? cast.map(person => `<div class="cast-chip">${escapeHtml(person.name)}${person.character ? ` · ${escapeHtml(person.character)}` : ""}</div>`).join("")
           : `<div class="cast-chip">Cast unavailable</div>`;
 
-        const backdrop = BACK(full.backdrop_path || full.poster_path, "w1280");
-        if (backdrop) {
-          document.getElementById("detail-backdrop").src = backdrop;
+        const backdropPath = full.backdrop_path || full.poster_path;
+        if (backdropPath) {
+          document.getElementById("detail-backdrop").src = BACK(backdropPath, "w1280");
+        }
+
+        const trailer = pickTrailer(full);
+        if (trailer) {
+          currentDetailTrailer = trailer;
+          document.getElementById("detail-trailer").style.display = "inline-flex";
         }
       } catch (err) {
         console.error(err);
@@ -994,15 +1055,6 @@
       document.getElementById("detail").classList.remove("open");
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
-
     async function init() {
       try {
         statusEl.textContent = "Loading curated lanes...";
@@ -1011,7 +1063,7 @@
         const laneResults = await Promise.all(
           LANES.map(async lane => ({
             lane,
-            movies: await fetchLane(lane)
+            movies: (await fetchLanePage(lane.key, 1)).slice(0, 18)
           }))
         );
 
@@ -1025,7 +1077,7 @@
         }
 
         focusedRow = 0;
-        focusedCol = { 0: 0 };
+        focusedCol = {0:0};
         applyFocus(false);
         statusEl.textContent = "";
       } catch (err) {
@@ -1045,43 +1097,34 @@
       }
 
       if (!rows.length) return;
-
       const row = rows[focusedRow];
       const col = focusedCol[focusedRow] || 0;
 
       switch (e.key) {
         case "ArrowRight":
           e.preventDefault();
-          if (col < row.movies.length - 1) {
-            focusedCol[focusedRow] = col + 1;
-            applyFocus(false);
-          }
+          focusedCol[focusedRow] = (col + 1) % row.movies.length;
+          applyFocus(false);
           break;
 
         case "ArrowLeft":
           e.preventDefault();
-          if (col > 0) {
-            focusedCol[focusedRow] = col - 1;
-            applyFocus(false);
-          }
+          focusedCol[focusedRow] = (col - 1 + row.movies.length) % row.movies.length;
+          applyFocus(false);
           break;
 
         case "ArrowDown":
           e.preventDefault();
-          if (focusedRow < rows.length - 1) {
-            focusedRow += 1;
-            if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
-            applyFocus(true);
-          }
+          focusedRow = (focusedRow + 1) % rows.length;
+          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+          applyFocus(true);
           break;
 
         case "ArrowUp":
           e.preventDefault();
-          if (focusedRow > 0) {
-            focusedRow -= 1;
-            if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
-            applyFocus(true);
-          }
+          focusedRow = (focusedRow - 1 + rows.length) % rows.length;
+          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+          applyFocus(true);
           break;
 
         case "Enter":
@@ -1096,9 +1139,7 @@
       if (e.target.id === "detail") closeDetail();
     });
 
-    document.getElementById("hero-open").addEventListener("click", () => {
-      openDetailFromFocus();
-    });
+    document.getElementById("hero-open").addEventListener("click", openDetailFromFocus);
 
     document.getElementById("hero-next").addEventListener("click", () => {
       const row = rows[focusedRow];
@@ -1106,6 +1147,14 @@
       const col = focusedCol[focusedRow] || 0;
       focusedCol[focusedRow] = (col + 1) % row.movies.length;
       applyFocus(false);
+    });
+
+    document.getElementById("hero-trailer").addEventListener("click", () => {
+      if (currentHeroTrailer) window.open(currentHeroTrailer, "_blank");
+    });
+
+    document.getElementById("detail-trailer").addEventListener("click", () => {
+      if (currentDetailTrailer) window.open(currentDetailTrailer, "_blank");
     });
 
     init();
