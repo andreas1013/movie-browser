@@ -5,21 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Movie Browser</title>
 <style>
-/* System fonts only — no network request */
 :root{
   --bg:#07080d;
   --card:#111318;
-  --card-hi:#1a1d26;
-  --bd:rgba(255,255,255,.10);
-  --bd-hi:rgba(255,255,255,.40);
+  --card-hi:#1c1f28;
   --t1:rgba(255,255,255,.95);
-  --t2:rgba(255,255,255,.60);
-  --t3:rgba(255,255,255,.35);
+  --t2:rgba(255,255,255,.58);
+  --t3:rgba(255,255,255,.32);
   --gold:#ffd54a;
-  --pad:52px;
-  --cw:320px;
-  --cg:14px;
-  --nav:64px;
+  --pad:48px;
+  --cw:300px;
+  --cg:12px;
+  --nav:60px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:auto}
@@ -27,228 +24,216 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
   background:var(--bg);color:var(--t1);
   overflow-x:hidden;overflow-y:scroll;
-  outline:none;-webkit-tap-highlight-color:transparent;
+  outline:none;
 }
 
-/* Ambient: simple fixed image, NO blur filter */
+/* Ambient — NO filter/blur, just a dim image */
 #amb{
   position:fixed;inset:0;z-index:0;
   background-size:cover;background-position:center;
-  opacity:0;transition:opacity 1s,background-image 0s;
+  opacity:0;
 }
 #amb-shade{
   position:fixed;inset:0;z-index:1;pointer-events:none;
-  /* solid gradient — no blur, cheap on GPU */
-  background:
-    linear-gradient(to bottom,rgba(7,8,13,.82) 0%,rgba(7,8,13,.55) 30%,rgba(7,8,13,.85) 75%,rgba(7,8,13,1) 100%);
+  background:linear-gradient(to bottom,
+    rgba(7,8,13,.75) 0%,
+    rgba(7,8,13,.45) 30%,
+    rgba(7,8,13,.80) 70%,
+    rgba(7,8,13,1)   100%);
 }
 
-/* NAV — solid bg, no backdrop-filter */
+/* NAV — solid, no blur */
 #nav{
   position:sticky;top:0;z-index:50;height:var(--nav);
   display:flex;align-items:center;justify-content:space-between;
   padding:0 var(--pad);
-  background:rgba(7,8,13,.95);
+  background:rgba(7,8,13,.98);
   border-bottom:1px solid rgba(255,255,255,.06);
 }
-.brand{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.brand{font-size:22px;font-weight:700;letter-spacing:-.02em}
 .brand b{color:var(--t3);font-weight:400}
-.keys{display:flex;gap:8px;font-size:11px;color:var(--t3)}
-.key{
-  padding:5px 9px;border-radius:6px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.04);
-}
+.ver{font-size:10px;color:var(--t3);margin-left:6px;font-weight:400;letter-spacing:.04em}
+.keys{display:flex;gap:6px;font-size:11px;color:var(--t3)}
+.key{padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
 
 /* HERO */
 #hero{
   position:relative;z-index:2;
-  min-height:62vh;display:flex;align-items:flex-end;
-  padding:36px var(--pad) 44px;
+  min-height:58vh;display:flex;align-items:flex-end;
+  padding:32px var(--pad) 40px;
 }
 #hero-img{
   position:absolute;inset:0;
   background-size:cover;background-position:center;
-  opacity:.28;
+  opacity:.25;
 }
 #hero-img::after{
   content:"";position:absolute;inset:0;
   background:
-    linear-gradient(to right,rgba(7,8,13,.95) 0%,rgba(7,8,13,.6) 45%,rgba(7,8,13,.2) 100%),
-    linear-gradient(to top,rgba(7,8,13,1) 0%,rgba(7,8,13,.5) 45%,transparent 100%);
+    linear-gradient(to right,rgba(7,8,13,.95) 0%,rgba(7,8,13,.55) 45%,rgba(7,8,13,.15) 100%),
+    linear-gradient(to top,rgba(7,8,13,1) 0%,rgba(7,8,13,.45) 50%,transparent 100%);
 }
-#hero-body{position:relative;z-index:2;max-width:760px}
-#hero-lane{
-  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--t3);margin-bottom:14px;
-  display:flex;align-items:center;gap:10px;
-}
-#hero-lane::before{content:"";width:22px;height:1px;background:rgba(255,255,255,.2)}
+#hero-body{position:relative;z-index:2;max-width:680px}
+#hero-lane{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
 #hero-title{
-  font-size:clamp(34px,4.8vw,72px);line-height:.95;
-  letter-spacing:-.035em;font-weight:700;
-  margin-bottom:16px;min-height:1em;
+  font-size:clamp(30px,4.5vw,64px);line-height:.95;
+  font-weight:700;letter-spacing:-.035em;margin-bottom:14px;min-height:1em;
 }
 #hero-overview{
-  font-size:clamp(14px,1.4vw,17px);line-height:1.52;
-  color:var(--t2);max-width:620px;margin-bottom:18px;
+  font-size:clamp(13px,1.3vw,16px);line-height:1.5;
+  color:var(--t2);max-width:580px;margin-bottom:14px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
-#hero-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-#hero-cast{font-size:13px;color:var(--t3);margin-bottom:20px;min-height:16px}
+#hero-meta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
 .pill{
   display:inline-flex;align-items:center;
-  padding:6px 12px;border-radius:999px;
+  padding:5px 11px;border-radius:999px;
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);
-  color:var(--t2);font-size:13px;font-weight:500;
+  color:var(--t2);font-size:12px;font-weight:500;
 }
 .pill.gold{color:var(--gold);border-color:rgba(255,213,74,.22);background:rgba(255,213,74,.06)}
-#hero-btns{display:flex;gap:10px}
+#hero-btns{display:flex;gap:8px}
 .btn{
   border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.09);
-  color:var(--t1);padding:12px 16px;border-radius:10px;
-  font-size:14px;font-weight:700;cursor:pointer;
-  font-family:inherit;
-  /* NO transform transitions — slow on webOS */
+  color:var(--t1);padding:11px 15px;border-radius:9px;
+  font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
 }
 .btn.pri{background:rgba(255,255,255,.92);color:#07080d}
-#hero-trailer-btn{display:none}
+#hero-trl-btn{display:none}
 
 /* ROWS */
 #rows{position:relative;z-index:2;padding-bottom:60px}
-.row{margin-bottom:6px}
-.row-head{display:flex;align-items:center;gap:12px;padding:20px var(--pad) 12px}
-.row-name{
-  font-size:20px;font-weight:700;letter-spacing:-.025em;
-  color:var(--t3);white-space:nowrap;
-  transition:color .15s;
-}
+.row{margin-bottom:4px}
+.row-head{display:flex;align-items:center;gap:10px;padding:18px var(--pad) 10px}
+.row-name{font-size:18px;font-weight:700;letter-spacing:-.02em;color:var(--t3);white-space:nowrap}
+/* NO transition on row-name color — causes repaint storm */
 .row.active .row-name{color:var(--t1)}
 .row-line{flex:1;height:1px;background:rgba(255,255,255,.06)}
-.row.active .row-line{background:rgba(255,255,255,.14)}
-.row-spinner{
-  width:14px;height:14px;border-radius:50%;flex-shrink:0;
-  border:1.5px solid rgba(255,255,255,.12);
-  border-top-color:var(--gold);
-  display:none;
-  animation:spin .6s linear infinite;
-}
-.row.loading .row-spinner{display:block}
-@keyframes spin{to{transform:rotate(360deg)}}
+.row.active .row-line{background:rgba(255,255,255,.12)}
 
-/* Right fade — feels infinite */
+/* Right edge fade */
 .row-outer{position:relative;overflow:hidden}
 .row-outer::after{
-  content:"";position:absolute;top:0;right:0;bottom:0;width:100px;
-  background:linear-gradient(to right,transparent,rgba(7,8,13,.9));
+  content:"";position:absolute;top:0;right:0;bottom:0;width:80px;
+  background:linear-gradient(to right,transparent,rgba(7,8,13,.88));
   pointer-events:none;z-index:2;
 }
-.row-wrap{overflow:hidden;padding:6px var(--pad) 24px}
+.row-wrap{overflow:hidden;padding:4px var(--pad) 20px}
 .row-track{
   display:flex;gap:var(--cg);
-  /* Use translate3d — tells WebOS to use compositor */
-  transition:transform .3s cubic-bezier(.25,.8,.25,1);
+  /* NO transition by default — only add when needed */
   will-change:transform;
   transform:translate3d(0,0,0);
 }
+.row-track.anim{transition:transform .25s ease}
 
-/* CARDS */
+/* CARDS — absolutely minimal styles, NO transitions */
 .card{
   flex:0 0 var(--cw);width:var(--cw);
-  background:var(--card);border:2px solid transparent;
-  border-radius:10px;overflow:hidden;
-  /* Simple box-shadow, no blur */
-  box-shadow:0 8px 24px rgba(0,0,0,.3);
-  transition:border-color .15s;
-  /* NO scale transform — compositing is expensive on budget WebOS */
+  background:var(--card);
+  border:2px solid transparent;
+  border-radius:8px;overflow:hidden;
 }
+/* Focused: border only, no scale/shadow that forces compositing */
 .card.focused{
-  border-color:var(--bd-hi);
+  border-color:rgba(255,255,255,.5);
   background:var(--card-hi);
-  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 16px 48px rgba(0,0,0,.5);
 }
-.row.active .card:not(.focused){opacity:.7}
-.card-img{
-  width:100%;aspect-ratio:16/9;
-  object-fit:cover;display:block;
-  background:rgba(255,255,255,.04);
-}
-.card-body{padding:11px 13px 13px}
-.card-title{
-  font-size:15px;font-weight:700;letter-spacing:-.015em;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  margin-bottom:6px;
-}
-.card-row{display:flex;justify-content:space-between;margin-bottom:5px}
-.card-year{font-size:12px;color:var(--t3)}
-.card-rating{font-size:12px;font-weight:700;color:var(--gold)}
-.card-cast{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Dim non-focused — NO transition, instant */
+.row.active .card:not(.focused){opacity:.65}
 
-/* DETAIL — solid bg, no backdrop-filter */
+.card-img{
+  width:100%;
+  /* padding-bottom % trick — no aspect-ratio for WebOS 3/4 compat */
+  height:0;padding-bottom:56.25%;
+  position:relative;overflow:hidden;
+  background:#1a1d26;
+}
+.card-img img{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.card-body{padding:10px 12px 12px}
+.card-title{
+  font-size:14px;font-weight:700;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;
+}
+.card-row{display:flex;justify-content:space-between}
+.card-yr{font-size:11px;color:var(--t3)}
+.card-rt{font-size:11px;font-weight:700;color:var(--gold)}
+
+/* DETAIL — solid bg, no blur */
 #detail{
   position:fixed;inset:0;z-index:100;
-  display:none;
-  background:rgba(7,8,13,.96);
-  overflow-y:auto;
+  display:none;background:rgba(7,8,13,.97);overflow-y:auto;
 }
 #detail.open{display:block}
-#d-back-wrap{position:relative;aspect-ratio:21/8;background:#111}
-#d-back-wrap::after{
-  content:"";position:absolute;inset:auto 0 0 0;height:75%;
+#d-img-wrap{
+  position:relative;
+  /* 21:8 via padding-bottom = 8/21 = 38.09% */
+  padding-bottom:38%;
+  background:#111;overflow:hidden;
+}
+#d-img-wrap::after{
+  content:"";position:absolute;bottom:0;left:0;right:0;height:70%;
   background:linear-gradient(to bottom,transparent,rgba(7,8,13,.98));
   pointer-events:none;
 }
-#d-backdrop{width:100%;height:100%;object-fit:cover;display:block}
+#d-img{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;object-fit:cover;display:block;
+}
 #d-close{
-  position:absolute;top:14px;right:14px;z-index:2;
-  width:38px;height:38px;border-radius:50%;
-  border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.6);
-  color:#fff;font-size:20px;cursor:pointer;font-family:inherit;
+  position:absolute;top:12px;right:12px;z-index:3;
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.65);
+  color:#fff;font-size:18px;cursor:pointer;font-family:inherit;
 }
-#d-body{padding:22px 32px 40px;max-width:900px}
-#d-title{font-size:clamp(26px,3vw,46px);font-weight:700;letter-spacing:-.03em;margin-bottom:8px}
-#d-tagline{color:var(--t3);font-size:15px;font-style:italic;margin-bottom:14px}
-#d-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-#d-trailer-btn{display:none;margin-bottom:18px}
-#d-cast-lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
-#d-cast{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+#d-body{padding:20px 30px 40px;max-width:860px}
+#d-title{font-size:clamp(24px,3vw,42px);font-weight:700;letter-spacing:-.03em;margin-bottom:6px}
+#d-tagline{color:var(--t3);font-size:14px;font-style:italic;margin-bottom:12px}
+#d-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+#d-trl-btn{display:none;margin-bottom:16px}
+#d-cast-lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+#d-cast{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
 .chip{
-  padding:8px 12px;border-radius:8px;
+  padding:7px 11px;border-radius:7px;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
-  color:var(--t2);font-size:13px;
+  color:var(--t2);font-size:12px;
 }
-#d-overview{color:var(--t2);line-height:1.7;font-size:15px}
+#d-overview{color:var(--t2);line-height:1.68;font-size:14px}
 
 /* VIDEO */
 #vid{
   position:fixed;inset:0;z-index:200;
-  background:rgba(0,0,0,.95);
-  display:none;align-items:center;justify-content:center;
+  background:#000;display:none;
+  align-items:center;justify-content:center;
 }
 #vid.open{display:flex}
-#vid-panel{width:min(96vw,1280px);aspect-ratio:16/9;position:relative;background:#000;border-radius:12px;overflow:hidden}
+#vid-panel{width:min(96vw,1280px);position:relative;background:#000;border-radius:10px;overflow:hidden}
+#vid-panel::before{content:"";display:block;padding-bottom:56.25%}
 #vid-close{
   position:absolute;top:10px;right:10px;z-index:2;
-  width:38px;height:38px;border-radius:50%;
-  border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.6);
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.7);
   color:#fff;font-size:18px;cursor:pointer;font-family:inherit;
 }
-#vid-frame{width:100%;height:100%;border:0}
+#vid-frame{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
 
-/* LOADING */
+/* SPLASH */
 #splash{
   position:fixed;inset:0;z-index:300;
-  background:var(--bg);
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:18px;
+  background:var(--bg);display:flex;
+  align-items:center;justify-content:center;flex-direction:column;gap:16px;
 }
 #splash.gone{display:none}
-.splash-logo{font-size:32px;font-weight:700;letter-spacing:-.02em;color:var(--t2)}
+.splash-logo{font-size:28px;font-weight:700;color:var(--t2)}
 .splash-spin{
-  width:32px;height:32px;border-radius:50%;
+  width:28px;height:28px;border-radius:50%;
   border:2px solid rgba(255,255,255,.1);border-top-color:var(--t2);
   animation:spin .6s linear infinite;
 }
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body tabindex="0">
@@ -257,15 +242,15 @@ body{
 <div id="amb-shade"></div>
 
 <div id="splash">
-  <div class="splash-logo">Movie Browser</div>
+  <div class="splash-logo">MovieBrowser</div>
   <div class="splash-spin"></div>
 </div>
 
 <nav id="nav">
-  <div class="brand">Movie<b>Browser</b> <span style="font-size:11px;font-weight:400;color:var(--t3);letter-spacing:.05em;">v4</span></div>
+  <div class="brand">Movie<b>Browser</b><span class="ver">v6</span></div>
   <div class="keys">
     <span class="key">↑↓ rows</span>
-    <span class="key">←→ browse</span>
+    <span class="key">←→ films</span>
     <span class="key">OK open</span>
     <span class="key">Back close</span>
   </div>
@@ -274,15 +259,14 @@ body{
 <section id="hero">
   <div id="hero-img"></div>
   <div id="hero-body">
-    <div id="hero-lane">Tonight's pick</div>
+    <div id="hero-lane"> </div>
     <div id="hero-title"> </div>
     <div id="hero-overview"> </div>
     <div id="hero-meta"></div>
-    <div id="hero-cast"> </div>
     <div id="hero-btns">
       <button class="btn pri" id="hero-open">Open details</button>
       <button class="btn" id="hero-next">Next →</button>
-      <button class="btn" id="hero-trailer-btn">▶ Trailer</button>
+      <button class="btn" id="hero-trl-btn">▶ Trailer</button>
     </div>
   </div>
 </section>
@@ -290,15 +274,15 @@ body{
 <section id="rows"></section>
 
 <div id="detail">
-  <div id="d-back-wrap">
-    <img id="d-backdrop" alt="">
+  <div id="d-img-wrap">
+    <img id="d-img" src="" alt="">
     <button id="d-close">×</button>
   </div>
   <div id="d-body">
     <h2 id="d-title"></h2>
     <div id="d-tagline"></div>
     <div id="d-pills"></div>
-    <button class="btn" id="d-trailer-btn">▶ Watch trailer</button>
+    <button class="btn" id="d-trl-btn">▶ Watch trailer</button>
     <div id="d-cast-lbl">Top cast</div>
     <div id="d-cast"></div>
     <div id="d-overview"></div>
@@ -308,257 +292,272 @@ body{
 <div id="vid">
   <div id="vid-panel">
     <button id="vid-close">×</button>
-    <iframe id="vid-frame" src="" title="Trailer" allow="autoplay;encrypted-media;picture-in-picture" allowfullscreen></iframe>
+    <iframe id="vid-frame" src="" title="Trailer"
+      allow="autoplay;encrypted-media;picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
 
 <script>
-var API = "https://movie-browsing.hanig.workers.dev";
-var IMG  = function(p,s){ return p ? "https://image.tmdb.org/t/p/"+(s||"w500")+p : ""; };
-var BACK = function(p){ return p ? "https://image.tmdb.org/t/p/w1280"+p : ""; };
+// ─── CONFIG ───────────────────────────────────────────────
+var API     = "https://movie-browsing.hanig.workers.dev";
+var IMG_URL = "https://image.tmdb.org/t/p/";
 
+// Only 8 lanes — fewer DOM nodes = faster everything
 var LANES = [
   {key:"tonight",  label:"Tonight's pick"},
   {key:"trending", label:"Trending now"},
   {key:"popular",  label:"Popular"},
   {key:"reviewers",label:"Critics' choice"},
-  {key:"crowd",    label:"Crowd favourites"},
-  {key:"short",    label:"Under 100 min"},
-  {key:"beautiful",label:"Slow & beautiful"},
   {key:"thrill",   label:"High-stakes thrill"},
-  {key:"cult",     label:"Cult favourites"},
   {key:"scifi",    label:"Sci-fi worlds"},
   {key:"crime",    label:"Crime & tension"},
-  {key:"uplifting",label:"Warm & uplifting"},
-  {key:"dark",     label:"Dark & unsettling"},
-  {key:"family",   label:"Family"},
   {key:"hidden",   label:"Hidden gems"},
 ];
 
-// State
+var MAX_CARDS = 12; // cards per row — keeps DOM tiny
+
+// ─── STATE ────────────────────────────────────────────────
 var rows       = [];
 var focRow     = 0;
 var focCol     = {};
 var detailOpen = false;
 var vidOpen    = false;
 var cache      = {};
-var heroTimer  = null;
 var heroTrl    = null;
 var dTrl       = null;
 var ambSet     = "";
 
-// ── UTILS ────────────────────────────────────────────────
+// Navigation debounce — prevents key-repeat storms on WebOS
+var navLock    = false;
+var bgPaused   = false; // pause background loading while user navigates
+var bgResumeT  = null;
+
+// Hero update debounce
+var heroTimer  = null;
+
+// ─── UTILS ────────────────────────────────────────────────
 function esc(s){
   return String(s||"")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-function yr(m){ return (m.release_date||"").slice(0,4)||"—"; }
-function stars(m){ return m.vote_average ? "★ "+m.vote_average.toFixed(1) : "★ —"; }
-function getTrailerUrl(m){
+function yr(m)    { return (m.release_date||"").slice(0,4)||"—"; }
+function stars(m) { return m.vote_average ? "★ "+m.vote_average.toFixed(1) : "★ —"; }
+function img(p,s) { return p ? IMG_URL+(s||"w500")+p : ""; }
+function back(p)  { return p ? IMG_URL+"w780"+p : ""; }
+
+function getTrailer(m){
   var vids = (m&&m.videos&&m.videos.results)||[];
-  var order = ["Trailer","Teaser","Clip","Featurette"];
-  for(var i=0;i<order.length;i++){
-    var v = vids.filter(function(v){ return v.site==="YouTube"&&v.type===order[i]&&v.key; })[0];
-    if(v) return "https://www.youtube.com/embed/"+v.key+"?autoplay=1&mute=1&rel=0";
+  var types = ["Trailer","Teaser","Clip"];
+  for(var t=0;t<types.length;t++){
+    for(var i=0;i<vids.length;i++){
+      if(vids[i].site==="YouTube"&&vids[i].type===types[t]&&vids[i].key)
+        return "https://www.youtube.com/embed/"+vids[i].key+"?autoplay=1&mute=1&rel=0";
+    }
   }
-  var any = vids.filter(function(v){ return v.site==="YouTube"&&v.key; })[0];
-  return any ? "https://www.youtube.com/embed/"+any.key+"?autoplay=1&mute=1&rel=0" : null;
-}
-function castStr(m,n){
-  return ((m&&m.credits&&m.credits.cast)||[]).slice(0,n||3).map(function(a){return a.name;}).join(" · ");
+  return null;
 }
 
-// ── API ──────────────────────────────────────────────────
-function apiFetch(path, cb){
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", API+path, true);
-  xhr.onload = function(){
-    if(xhr.status===200){
-      try{ cb(null, JSON.parse(xhr.responseText)); }
-      catch(e){ cb(e); }
-    } else { cb(new Error(xhr.status)); }
-  };
-  xhr.onerror = function(){ cb(new Error("network")); };
-  xhr.send();
+function castStr(m,n){
+  var cast = (m&&m.credits&&m.credits.cast)||[];
+  var out = [];
+  for(var i=0;i<Math.min(n||3,cast.length);i++) out.push(cast[i].name);
+  return out.join(" · ");
+}
+
+// ─── XHR ──────────────────────────────────────────────────
+function xhr(url, cb){
+  var r = new XMLHttpRequest();
+  r.open("GET", url, true);
+  r.timeout = 8000; // 8s timeout — TV networks are slow
+  r.onload  = function(){ if(r.status===200){ try{ cb(null,JSON.parse(r.responseText)); }catch(e){ cb(e); } } else cb(new Error(r.status)); };
+  r.onerror = function(){ cb(new Error("net")); };
+  r.ontimeout = function(){ cb(new Error("timeout")); };
+  r.send();
 }
 
 function fetchLane(key, page, cb){
-  apiFetch("/api/browse?intent="+key+"&page="+(page||1), function(err,d){
-    if(err||!d||!d.results) return cb([]);
-    cb(d.results.filter(function(m){ return m&&(m.backdrop_path||m.poster_path); }));
+  xhr(API+"/api/browse?intent="+key+"&page="+(page||1), function(e,d){
+    if(e||!d||!d.results) return cb([]);
+    var out = [];
+    for(var i=0;i<d.results.length;i++){
+      var m = d.results[i];
+      if(m&&(m.backdrop_path||m.poster_path)) out.push(m);
+    }
+    cb(out);
   });
 }
 
 function fetchMovie(id, cb){
   if(cache[id]) return cb(null,cache[id]);
-  apiFetch("/api/movie?id="+id, function(err,d){
-    if(!err&&d) cache[id]=d;
-    cb(err,d);
+  xhr(API+"/api/movie?id="+id, function(e,d){
+    if(!e&&d) cache[id]=d;
+    cb(e,d);
   });
 }
 
-// ── AMBIENT (no blur — just the image faded) ─────────────
+// ─── AMBIENT ──────────────────────────────────────────────
 function setAmbient(url){
   if(!url||url===ambSet) return;
   ambSet = url;
   var el = document.getElementById("amb");
   el.style.backgroundImage = "url("+url+")";
-  el.style.opacity = "0.22";
+  el.style.opacity = "0.18";
 }
 
-// ── HERO ─────────────────────────────────────────────────
-function setHero(movie, laneName){
+// ─── HERO ─────────────────────────────────────────────────
+// Hero update is debounced — only fires 250ms after navigation stops
+// This means no fetches fire during rapid key-repeat
+function scheduleHero(movie, laneName){
+  clearTimeout(heroTimer);
+  heroTimer = setTimeout(function(){ doSetHero(movie, laneName); }, 250);
+}
+
+function doSetHero(movie, laneName){
   document.getElementById("hero-lane").textContent     = laneName;
   document.getElementById("hero-title").textContent    = movie.title||"";
   document.getElementById("hero-overview").textContent = movie.overview||"";
-  document.getElementById("hero-meta").innerHTML       =
-    "<span class='pill gold'>"+stars(movie)+"</span><span class='pill'>"+yr(movie)+"</span>";
-  document.getElementById("hero-cast").textContent     = "";
-  document.getElementById("hero-trailer-btn").style.display = "none";
+  document.getElementById("hero-meta").innerHTML =
+    "<span class='pill gold'>"+stars(movie)+"</span>"+
+    "<span class='pill'>"+yr(movie)+"</span>";
   heroTrl = null;
+  document.getElementById("hero-trl-btn").style.display = "none";
 
-  var back = movie.backdrop_path||movie.poster_path;
-  if(back){
-    var url = BACK(back);
-    setAmbient(url);
-    document.getElementById("hero-img").style.backgroundImage = "url("+url+")";
+  var bgUrl = back(movie.backdrop_path||movie.poster_path);
+  if(bgUrl){
+    setAmbient(bgUrl);
+    document.getElementById("hero-img").style.backgroundImage = "url("+bgUrl+")";
   }
 
-  // Fetch full in background for cast + trailer
-  fetchMovie(movie.id, function(err, full){
+  // Only fetch trailer info — NOT cast — keeps it one lightweight call
+  fetchMovie(movie.id, function(e,full){
     if(!full) return;
-    document.getElementById("hero-cast").textContent = castStr(full);
-    var t = getTrailerUrl(full);
-    if(t){ heroTrl = t; document.getElementById("hero-trailer-btn").style.display = ""; }
+    var t = getTrailer(full);
+    if(t){ heroTrl=t; document.getElementById("hero-trl-btn").style.display=""; }
   });
 }
 
-// ── BUILD CARD ────────────────────────────────────────────
-function buildCard(movie, rowIdx, colIdx){
+// ─── CARDS ────────────────────────────────────────────────
+function buildCard(movie, ri, ci){
   var card = document.createElement("div");
   card.className = "card";
 
-  var imgSrc = IMG(movie.backdrop_path,"w500") || IMG(movie.poster_path,"w342");
+  // Use w300 for card images — much faster to load on slow TV connection
+  var src = img(movie.backdrop_path,"w300") || img(movie.poster_path,"w185");
 
   card.innerHTML =
-    (imgSrc ? "<img class='card-img' src='"+imgSrc+"' alt='"+esc(movie.title)+"' loading='lazy'>" : "<div class='card-img'></div>")+
+    "<div class='card-img'>"+(src?"<img src='"+src+"' alt='"+esc(movie.title)+"' loading='lazy'>":"")+"</div>"+
     "<div class='card-body'>"+
       "<div class='card-title'>"+esc(movie.title||"Untitled")+"</div>"+
       "<div class='card-row'>"+
-        "<span class='card-year'>"+yr(movie)+"</span>"+
-        "<span class='card-rating'>"+stars(movie)+"</span>"+
+        "<span class='card-yr'>"+yr(movie)+"</span>"+
+        "<span class='card-rt'>"+stars(movie)+"</span>"+
       "</div>"+
-      "<div class='card-cast' id='cc-"+rowIdx+"-"+colIdx+"'></div>"+
     "</div>";
 
-  card.onclick = function(){
-    focRow = rowIdx;
-    focCol[rowIdx] = colIdx;
-    applyFocus(false);
-    openDetail();
-  };
-
+  card.onclick = function(){ focRow=ri; focCol[ri]=ci; applyFocus(false); openDetail(); };
   return card;
 }
 
-// ── BUILD ROW ─────────────────────────────────────────────
-function buildRow(lane, movies, rowIdx){
-  var section = document.createElement("section");
-  section.className = "row";
-  section.innerHTML =
+// ─── ROWS ─────────────────────────────────────────────────
+function buildRow(lane, movies, ri){
+  var s = document.createElement("section");
+  s.className = "row";
+  s.innerHTML =
     "<div class='row-head'>"+
       "<div class='row-name'>"+esc(lane.label)+"</div>"+
-      "<div class='row-spinner'></div>"+
       "<div class='row-line'></div>"+
     "</div>"+
     "<div class='row-outer'>"+
       "<div class='row-wrap'><div class='row-track'></div></div>"+
     "</div>";
-  document.getElementById("rows").appendChild(section);
+  document.getElementById("rows").appendChild(s);
 
-  var track = section.querySelector(".row-track");
-  var wrap  = section.querySelector(".row-wrap");
-  movies.forEach(function(m,i){ track.appendChild(buildCard(m,rowIdx,i)); });
+  var track = s.querySelector(".row-track");
+  var wrap  = s.querySelector(".row-wrap");
 
-  var row = {lane:lane, movies:movies.slice(), track:track, wrap:wrap, el:section, page:2, busy:false};
+  // Limit to MAX_CARDS per row — keeps DOM small
+  var slice = movies.slice(0, MAX_CARDS);
+  for(var i=0;i<slice.length;i++) track.appendChild(buildCard(slice[i], ri, i));
+
+  var row = {lane:lane, movies:slice, track:track, wrap:wrap, el:s, page:2, busy:false, full:movies.length>=20};
   rows.push(row);
-  return row;
 }
 
-// ── FOCUS ─────────────────────────────────────────────────
+// ─── FOCUS ────────────────────────────────────────────────
+// applyFocus does ZERO network calls — purely DOM updates
 function applyFocus(scroll){
-  var i, cards, rows2;
-  // Clear
-  rows2 = document.querySelectorAll(".row.active"); for(i=0;i<rows2.length;i++) rows2[i].classList.remove("active");
-  cards = document.querySelectorAll(".card.focused"); for(i=0;i<cards.length;i++) cards[i].classList.remove("focused");
+  // Remove old active/focused classes
+  var i, els;
+  els = document.querySelectorAll(".row.active");
+  for(i=0;i<els.length;i++) els[i].classList.remove("active");
+  els = document.querySelectorAll(".card.focused");
+  for(i=0;i<els.length;i++) els[i].classList.remove("focused");
 
   var ri  = Math.max(0, Math.min(focRow, rows.length-1));
   var row = rows[ri];
   if(!row) return;
 
-  var maxci = row.movies.length-1;
-  var ci    = Math.max(0, Math.min(focCol[ri]||0, maxci));
+  var ci = Math.max(0, Math.min(focCol[ri]||0, row.movies.length-1));
   focCol[ri] = ci;
 
   var card = row.track.children[ci];
   if(card) card.classList.add("focused");
-
   row.el.classList.add("active");
 
-  // Slide track
-  var stride = (parseInt(getComputedStyle(document.documentElement).getPropertyValue("--cw"))||320)
-             + (parseInt(getComputedStyle(document.documentElement).getPropertyValue("--cg"))||14);
-  var wrapW  = row.wrap.clientWidth;
-  var maxOff = Math.max(0, row.movies.length*stride - wrapW);
-  var shift  = Math.max(0, Math.min(ci*stride - wrapW/2 + stride/2, maxOff));
-  row.track.style.transform = "translate3d(-"+shift+"px,0,0)";
+  // Slide track — add animation class, remove after
+  var cw    = 300+12; // card-w + card-gap
+  var wrapW = row.wrap.clientWidth||800;
+  var maxOff= Math.max(0, row.movies.length*cw - wrapW);
+  var shift = Math.max(0, Math.min(ci*cw - wrapW/2 + 150, maxOff));
 
-  // Scroll page — explicit, accounts for nav height
+  row.track.classList.add("anim");
+  row.track.style.transform = "translate3d(-"+shift+"px,0,0)";
+  // Remove anim class after transition so it doesn't run on rebuild
+  setTimeout(function(){ if(row.track) row.track.classList.remove("anim"); }, 300);
+
+  // Scroll page — simple, no smooth scroll (smooth is slow on WebOS)
   if(scroll!==false){
-    var top = row.el.getBoundingClientRect().top + window.pageYOffset - 68 - 16;
+    var top = row.el.offsetTop - parseInt(getComputedStyle(document.documentElement).getPropertyValue("--nav")||60) - 12;
     window.scrollTo(0, Math.max(0,top));
   }
 
-  // Hero (debounced 100ms so rapid keys don't fire fetches)
-  clearTimeout(heroTimer);
-  heroTimer = setTimeout(function(){ setHero(row.movies[ci], row.lane.label); }, 100);
+  // Schedule hero update — fires 250ms after keys stop
+  scheduleHero(row.movies[ci], row.lane.label);
 
-  // Populate cast for focused card
-  (function(m,r,c){
-    fetchMovie(m.id, function(err,full){
-      if(!full) return;
-      var el = document.getElementById("cc-"+r+"-"+c);
-      if(el&&!el.textContent) el.textContent = castStr(full);
-    });
-  })(row.movies[ci], ri, ci);
-
-  // Load more near end
-  if(ci >= row.movies.length - 8) loadMore(ri);
+  // Load more if near end — but only if not navigating rapidly
+  if(ci >= row.movies.length-5) scheduleLoadMore(ri);
 }
 
-// ── LOAD MORE ─────────────────────────────────────────────
-function loadMore(ri){
+// ─── LOAD MORE ────────────────────────────────────────────
+// Deferred — only fires 400ms after navigation stops
+var loadMoreTimer = null;
+function scheduleLoadMore(ri){
+  clearTimeout(loadMoreTimer);
+  loadMoreTimer = setTimeout(function(){ doLoadMore(ri); }, 400);
+}
+
+function doLoadMore(ri){
   var row = rows[ri];
-  if(!row||row.busy) return;
+  if(!row||row.busy||row.movies.length>=30) return;
   row.busy = true;
-  row.el.classList.add("loading");
   fetchLane(row.lane.key, row.page, function(movies){
+    if(!movies||!movies.length){ row.busy=false; return; }
     var exist = {};
-    row.movies.forEach(function(m){ exist[m.id]=1; });
-    movies.forEach(function(m){
-      if(exist[m.id]) return;
+    for(var i=0;i<row.movies.length;i++) exist[row.movies[i].id]=1;
+    for(var j=0;j<movies.length&&row.movies.length<30;j++){
+      var m = movies[j];
+      if(exist[m.id]) continue;
       var col = row.movies.length;
       row.movies.push(m);
       row.track.appendChild(buildCard(m, ri, col));
-    });
+    }
     row.page++;
     row.busy = false;
-    row.el.classList.remove("loading");
   });
 }
 
-// ── DETAIL ────────────────────────────────────────────────
+// ─── DETAIL ───────────────────────────────────────────────
 function openDetail(){
   var row = rows[focRow];
   var m   = row&&row.movies[focCol[focRow]||0];
@@ -569,17 +568,20 @@ function openDetail(){
   el.classList.add("open");
   el.scrollTop = 0;
 
+  // Reset
+  document.getElementById("d-img").src          = "";
+  document.getElementById("d-img").style.display = "block";
   document.getElementById("d-title").textContent    = "Loading…";
   document.getElementById("d-tagline").textContent  = "";
   document.getElementById("d-overview").textContent = "";
   document.getElementById("d-cast").innerHTML       = "";
   document.getElementById("d-pills").innerHTML      = "";
-  document.getElementById("d-backdrop").src         = "";
-  document.getElementById("d-trailer-btn").style.display = "none";
+  document.getElementById("d-trl-btn").style.display= "none";
   dTrl = null;
 
-  fetchMovie(m.id, function(err, full){
+  fetchMovie(m.id, function(e,full){
     if(!full){ document.getElementById("d-title").textContent="Could not load."; return; }
+
     document.getElementById("d-title").textContent    = full.title||m.title||"";
     document.getElementById("d-tagline").textContent  = full.tagline||"";
     document.getElementById("d-overview").textContent = full.overview||"";
@@ -588,43 +590,51 @@ function openDetail(){
       "<span class='pill'>"+yr(full)+"</span>"+
       (full.runtime?"<span class='pill'>"+full.runtime+"m</span>":"")+
       (full.vote_count?"<span class='pill'>"+full.vote_count.toLocaleString()+" votes</span>":"");
-    document.getElementById("d-cast").innerHTML =
-      ((full.credits&&full.credits.cast)||[]).slice(0,8)
-        .map(function(p){ return "<div class='chip'>"+esc(p.name)+(p.character?" · "+esc(p.character):"")+"</div>"; })
-        .join("")||"<div class='chip'>Cast unavailable</div>";
-    var back = full.backdrop_path||full.poster_path;
-    if(back) document.getElementById("d-backdrop").src = BACK(back);
-    var t = getTrailerUrl(full);
-    if(t){ dTrl=t; document.getElementById("d-trailer-btn").style.display=""; }
+
+    var cast = (full.credits&&full.credits.cast)||[];
+    var chips = "";
+    for(var i=0;i<Math.min(8,cast.length);i++)
+      chips += "<div class='chip'>"+esc(cast[i].name)+(cast[i].character?" · "+esc(cast[i].character):"")+"</div>";
+    document.getElementById("d-cast").innerHTML = chips||"<div class='chip'>Cast unavailable</div>";
+
+    var t = getTrailer(full);
+    if(t){ dTrl=t; document.getElementById("d-trl-btn").style.display=""; }
+
+    // Set image AFTER panel is visible and content loaded
+    var bp = full.backdrop_path||full.poster_path;
+    if(bp){
+      var imgEl = document.getElementById("d-img");
+      imgEl.onerror = function(){ this.style.display="none"; };
+      setTimeout(function(){ imgEl.src = back(bp); }, 100);
+    }
   });
 }
 
 function closeDetail(){
-  detailOpen = false;
+  detailOpen=false;
   document.getElementById("detail").classList.remove("open");
 }
 
-// ── VIDEO ─────────────────────────────────────────────────
+// ─── VIDEO ────────────────────────────────────────────────
 function openVid(url){
   if(!url) return;
-  document.getElementById("vid-frame").src = url;
+  document.getElementById("vid-frame").src=url;
   document.getElementById("vid").classList.add("open");
-  vidOpen = true;
+  vidOpen=true;
 }
 function closeVid(){
-  document.getElementById("vid-frame").src = "";
+  document.getElementById("vid-frame").src="";
   document.getElementById("vid").classList.remove("open");
-  vidOpen = false;
+  vidOpen=false;
 }
 
-// ── KEYBOARD / TV REMOTE ──────────────────────────────────
-// Covers: standard keyboard, LG webOS, Samsung Tizen, Android TV
+// ─── KEYBOARD / TV REMOTE ─────────────────────────────────
 var UP    = {38:1,19:1};
 var DOWN  = {40:1,20:1};
 var LEFT  = {37:1,21:1};
 var RIGHT = {39:1,22:1};
 var OK    = {13:1,32:1};
-var BACK  = {8:1,27:1,461:1,10009:1};  // Backspace, Esc, webOS Back, Tizen Back
+var BACK  = {8:1,27:1,461:1,10009:1};
 
 document.addEventListener("keydown", function(e){
   var c = e.keyCode||e.which;
@@ -634,13 +644,18 @@ document.addEventListener("keydown", function(e){
     return;
   }
   if(detailOpen){
-    if(BACK[c]){ e.preventDefault(); closeDetail(); }
+    if(BACK[c]||LEFT[c]){ e.preventDefault(); closeDetail(); }
     return;
   }
   if(!rows.length) return;
 
-  var ri = focRow;
-  var ci = focCol[ri]||0;
+  // Throttle: ignore key if previous nav hasn't rendered yet
+  // This prevents key-repeat from queuing up 20 DOM updates
+  if(navLock) return;
+  navLock = true;
+  setTimeout(function(){ navLock=false; }, 80); // 80ms = ~12fps nav max
+
+  var ri = focRow, ci = focCol[ri]||0;
 
   if(RIGHT[c]){
     e.preventDefault();
@@ -653,35 +668,33 @@ document.addEventListener("keydown", function(e){
     e.preventDefault();
     if(focRow<rows.length-1){
       focRow++;
-      if(focCol[focRow]==null) focCol[focRow]=0;
+      if(!focCol[focRow]) focCol[focRow]=0;
       applyFocus(true);
     }
   } else if(UP[c]){
     e.preventDefault();
     if(focRow>0){
       focRow--;
-      if(focCol[focRow]==null) focCol[focRow]=0;
+      if(!focCol[focRow]) focCol[focRow]=0;
       applyFocus(true);
     }
   } else if(OK[c]){
-    e.preventDefault();
-    openDetail();
-  } else if(BACK[c]){
-    e.preventDefault();
+    e.preventDefault(); openDetail();
   }
 });
 
-// ── BUTTONS ───────────────────────────────────────────────
-document.getElementById("hero-open").onclick        = openDetail;
-document.getElementById("hero-next").onclick        = function(){ focCol[focRow]=(focCol[focRow]||0)+1; applyFocus(false); };
-document.getElementById("hero-trailer-btn").onclick = function(){ openVid(heroTrl); };
-document.getElementById("d-trailer-btn").onclick    = function(){ openVid(dTrl); };
-document.getElementById("d-close").onclick          = closeDetail;
-document.getElementById("vid-close").onclick        = closeVid;
+// ─── BUTTONS ──────────────────────────────────────────────
+document.getElementById("hero-open").onclick    = openDetail;
+document.getElementById("hero-next").onclick    = function(){ focCol[focRow]=(focCol[focRow]||0)+1; applyFocus(false); };
+document.getElementById("hero-trl-btn").onclick = function(){ openVid(heroTrl); };
+document.getElementById("d-trl-btn").onclick    = function(){ openVid(dTrl); };
+document.getElementById("d-close").onclick      = closeDetail;
+document.getElementById("vid-close").onclick    = closeVid;
 
-// ── INIT ──────────────────────────────────────────────────
-// Load ONE lane first — show UI in under 1 second
-// Then trickle in remaining lanes one at a time
+// ─── INIT ─────────────────────────────────────────────────
+// Load first lane → show UI → load remaining lanes one at a time
+// with a generous 500ms gap so background loading never competes
+// with the user's navigation
 function init(){
   document.body.focus();
 
@@ -689,26 +702,26 @@ function init(){
     document.getElementById("splash").className = "gone";
 
     if(!movies.length){
-      document.getElementById("hero-title").textContent = "Failed to load. Check worker.";
+      document.getElementById("hero-title").textContent = "Failed to load. Check worker URL.";
       return;
     }
 
     buildRow(LANES[0], movies, 0);
-    focRow = 0; focCol = {0:0};
+    focRow=0; focCol={0:0};
     applyFocus(false);
 
-    // Load remaining lanes sequentially, 300ms apart
-    // Sequential = only 1 XHR in flight at a time = no congestion on budget TV
+    // Load remaining lanes sequentially, 500ms apart
+    // Long gap ensures background I/O never competes with UI
     var idx = 1;
-    function nextLane(){
-      if(idx >= LANES.length) return;
+    function next(){
+      if(idx>=LANES.length) return;
       var lane = LANES[idx++];
       fetchLane(lane.key, 1, function(movies){
         if(movies.length) buildRow(lane, movies, rows.length);
-        setTimeout(nextLane, 300);
+        setTimeout(next, 500);
       });
     }
-    setTimeout(nextLane, 300);
+    setTimeout(next, 500);
   });
 }
 
