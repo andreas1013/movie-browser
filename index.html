@@ -3,376 +3,1112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CineView TV</title>
+  <title>Movie Browser TV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #05070d;
-      --panel: rgba(255,255,255,0.08);
-      --panel-2: rgba(255,255,255,0.12);
-      --line: rgba(255,255,255,0.12);
+      --bg: #06070b;
+      --panel: rgba(255,255,255,0.07);
+      --panel-hi: rgba(255,255,255,0.12);
+      --border: rgba(255,255,255,0.10);
+      --border-hi: rgba(255,255,255,0.35);
       --text: rgba(255,255,255,0.96);
-      --muted: rgba(255,255,255,0.62);
-      --soft: rgba(255,255,255,0.34);
+      --text-2: rgba(255,255,255,0.72);
+      --text-3: rgba(255,255,255,0.42);
       --gold: #ffd54a;
-      --focus: #ffffff;
-      --radius: 18px;
-      --rail-gap: 18px;
-      --card-w: min(28vw, 420px);
-      --card-h: calc(var(--card-w) * 0.58);
-      --safe-x: clamp(28px, 4vw, 72px);
+      --accent: #8ab4ff;
+      --shadow: 0 30px 80px rgba(0,0,0,0.65);
+      --row-pad: 56px;
+      --card-w: 360px;
+      --card-gap: 18px;
+      --radius: 16px;
+      --nav-h: 72px;
     }
+
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
-    body { overflow: hidden; }
-    #bgA, #bgB {
-      position: fixed; inset: -6vh; background-size: cover; background-position: center; filter: blur(70px) saturate(1.25) brightness(.38); transform: scale(1.08); transition: opacity .8s ease;
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      overflow-y: auto;
     }
-    #bgB { opacity: 0; }
-    .overlay {
-      position: fixed; inset: 0; pointer-events: none;
+
+    body::-webkit-scrollbar,
+    #detail-body::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    #bg,
+    #bg-next {
+      position: fixed;
+      inset: -80px;
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.12);
+      filter: blur(80px) saturate(1.25) brightness(0.28);
+      z-index: 0;
+    }
+
+    #bg-next {
+      opacity: 0;
+      transition: opacity 700ms ease;
+    }
+
+    #bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
       background:
-        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,.06), transparent 65%),
-        linear-gradient(to bottom, rgba(5,7,13,.28), rgba(5,7,13,.75) 42%, rgba(5,7,13,.95));
+        radial-gradient(ellipse 85% 55% at 50% 0%, rgba(20,24,34,0.20), rgba(6,7,11,0.92)),
+        linear-gradient(to bottom, rgba(6,7,11,0.40), rgba(6,7,11,0.70) 35%, rgba(6,7,11,1) 100%);
     }
-    .app { position: relative; z-index: 2; height: 100vh; display: grid; grid-template-rows: auto 1fr; }
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center; padding: 20px var(--safe-x) 12px; color: var(--soft);
-      letter-spacing: .12em; text-transform: uppercase; font-size: 12px;
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
-    .hero {
-      padding: 1vh var(--safe-x) 3vh; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr); gap: 32px; align-items: end;
+
+    #app {
+      position: relative;
+      z-index: 5;
+      min-height: 100vh;
     }
-    .eyebrow { color: var(--soft); letter-spacing: .2em; text-transform: uppercase; font-size: 12px; margin-bottom: 12px; }
-    .title { font-size: clamp(42px, 5.6vw, 92px); line-height: .94; letter-spacing: -.04em; font-weight: 700; margin: 0 0 18px; max-width: 12ch; }
-    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
-    .pill {
-      padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.08); font-size: 14px; color: var(--muted);
-    }
-    .pill.gold { color: var(--gold); border-color: rgba(255,213,74,.25); background: rgba(255,213,74,.08); }
-    .overview { color: var(--muted); font-size: clamp(15px, 1.5vw, 20px); line-height: 1.6; max-width: 52ch; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .decision {
-      align-self: center; justify-self: end; width: min(36vw, 520px); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 22px; padding: 24px;
+
+    #nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--row-pad);
+      background: rgba(6,7,11,0.55);
       backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    .decision h2 { margin: 0 0 8px; font-size: clamp(22px, 2.1vw, 34px); letter-spacing: -.03em; }
-    .decision p { margin: 0; color: var(--muted); line-height: 1.5; font-size: 15px; }
-    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-    .chip { padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); background: rgba(255,255,255,.05); }
-    .viewport {
-      overflow: hidden auto; padding: 0 0 44px; scroll-behavior: smooth; scrollbar-width: none;
+
+    .brand {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
     }
-    .viewport::-webkit-scrollbar { display:none; }
-    .rail-section { margin-bottom: 22px; }
-    .rail-head { display:flex; align-items:center; justify-content:space-between; gap:20px; padding: 0 var(--safe-x) 12px; }
-    .rail-title { font-size: clamp(22px, 2.2vw, 34px); letter-spacing: -.03em; font-weight: 650; }
-    .rail-sub { color: var(--soft); font-size: 14px; }
-    .rail-wrap { overflow: hidden; padding: 4px var(--safe-x) 14px; }
-    .rail { display:flex; gap: var(--rail-gap); transition: transform .28s ease; will-change: transform; }
+
+    .brand span {
+      color: var(--text-3);
+      font-weight: 400;
+    }
+
+    .nav-help {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--text-3);
+      font-size: 12px;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .key b {
+      display: inline-block;
+      min-width: 24px;
+      padding: 3px 7px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-2);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    #hero {
+      min-height: 72vh;
+      display: flex;
+      align-items: end;
+      padding: 40px var(--row-pad) 48px;
+    }
+
+    #hero-content {
+      width: min(900px, 100%);
+    }
+
+    .eyebrow {
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 12px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 28px;
+      height: 1px;
+      background: rgba(255,255,255,0.22);
+    }
+
+    #hero-title {
+      font-size: clamp(42px, 6vw, 86px);
+      line-height: 0.94;
+      letter-spacing: -0.045em;
+      margin: 0 0 20px;
+      text-shadow: 0 8px 40px rgba(0,0,0,0.45);
+    }
+
+    #hero-sub {
+      color: var(--text-2);
+      font-size: clamp(17px, 1.8vw, 21px);
+      line-height: 1.55;
+      max-width: 760px;
+      margin-bottom: 22px;
+    }
+
+    #hero-meta,
+    #hero-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    #hero-meta {
+      margin-bottom: 14px;
+    }
+
+    #hero-tags {
+      margin-bottom: 22px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--text-2);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .pill.gold {
+      color: var(--gold);
+      border-color: rgba(255,213,74,0.25);
+      background: rgba(255,213,74,0.07);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.13);
+      outline: none;
+    }
+
+    .btn.primary {
+      background: rgba(255,255,255,0.95);
+      color: #0c0e14;
+    }
+
+    #rows {
+      padding-bottom: 80px;
+    }
+
+    .row {
+      margin-bottom: 14px;
+    }
+
+    .row-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 var(--row-pad) 16px;
+    }
+
+    .row-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-2);
+      transition: color 180ms ease;
+    }
+
+    .row.active .row-title {
+      color: var(--text);
+    }
+
+    .row-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .row-track-outer {
+      position: relative;
+    }
+
+    .row-track-outer::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 140px;
+      pointer-events: none;
+      background: linear-gradient(to right, transparent, rgba(6,7,11,0.92));
+    }
+
+    .row-wrap {
+      overflow: hidden;
+      padding: 4px var(--row-pad) 30px;
+    }
+
+    .row-track {
+      display: flex;
+      gap: var(--card-gap);
+      will-change: transform;
+      transition: transform 320ms cubic-bezier(.2,.8,.2,1);
+    }
+
     .card {
-      width: var(--card-w); flex: 0 0 var(--card-w); border-radius: var(--radius); overflow: hidden; background: var(--panel); border: 1px solid var(--line);
-      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, opacity .2s ease;
+      position: relative;
+      width: var(--card-w);
+      flex: 0 0 var(--card-w);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 18px 44px rgba(0,0,0,0.22);
+      transform: scale(1);
+      transition:
+        transform 220ms ease,
+        border-color 220ms ease,
+        background 220ms ease,
+        box-shadow 220ms ease,
+        opacity 220ms ease;
     }
+
+    .row.active .card:not(.focused) {
+      opacity: 0.74;
+    }
+
     .card.focused {
-      transform: scale(1.08) translateY(-8px); border-color: rgba(255,255,255,.7); box-shadow: 0 18px 60px rgba(0,0,0,.55), 0 0 0 2px rgba(255,255,255,.28);
-      background: var(--panel-2);
+      transform: scale(1.08) translateY(-8px);
+      border-color: var(--border-hi);
+      background: var(--panel-hi);
+      box-shadow: var(--shadow);
+      z-index: 2;
     }
-    .rail-section.active .card:not(.focused) { opacity: .58; }
-    .poster { position: relative; width: 100%; height: var(--card-h); object-fit: cover; display: block; background: rgba(255,255,255,.06); }
-    .poster::after { content:''; }
-    .card-body { padding: 14px 16px 16px; }
-    .card-title { font-size: clamp(18px, 1.5vw, 24px); letter-spacing: -.02em; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; }
-    .card-meta { display:flex; justify-content:space-between; color: var(--muted); font-size: 14px; }
-    .reason { margin-top: 10px; color: var(--soft); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .help { position: fixed; right: var(--safe-x); bottom: 18px; color: var(--soft); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
-    .modal {
-      position: fixed; inset: 0; display:none; place-items:center; background: rgba(0,0,0,.68); backdrop-filter: blur(10px); z-index: 9;
+
+    .card-image-wrap {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: rgba(255,255,255,0.04);
     }
-    .modal.open { display:grid; }
-    .panel {
-      width: min(1080px, 92vw); max-height: 88vh; overflow:auto; background: rgba(10,12,20,.92); border: 1px solid rgba(255,255,255,.12); border-radius: 24px;
-      box-shadow: 0 28px 100px rgba(0,0,0,.6);
+
+    .card-image-wrap::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 50%;
+      background: linear-gradient(to bottom, transparent, rgba(10,12,18,0.88));
+      pointer-events: none;
     }
-    .panel img { width:100%; aspect-ratio: 21/9; object-fit:cover; display:block; }
-    .panel-body { padding: 28px 34px 34px; }
-    .panel-body h3 { font-size: 40px; line-height: 1; letter-spacing: -.04em; margin: 0 0 10px; }
-    .grid-2 { display:grid; grid-template-columns: 1fr 320px; gap: 30px; }
-    .choices { display:grid; gap: 12px; }
-    .choice { padding: 14px 16px; border:1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.04); }
-    .choice strong { display:block; margin-bottom: 6px; }
-    @media (max-width: 980px) {
-      body { overflow:auto; }
-      .hero { grid-template-columns: 1fr; }
-      .decision { justify-self:stretch; width:auto; }
-      .grid-2 { grid-template-columns: 1fr; }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body {
+      padding: 14px 16px 16px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 8px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text-3);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .card-reason {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text-2);
+      min-height: 38px;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+    }
+
+    .card-rating {
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .loading,
+    .error {
+      padding: 0 var(--row-pad);
+      color: var(--text-3);
+      font-size: 15px;
+    }
+
+    #detail {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      background: rgba(3,4,8,0);
+      backdrop-filter: blur(0px);
+      transition: background 220ms ease, backdrop-filter 220ms ease;
+    }
+
+    #detail.open {
+      pointer-events: all;
+      background: rgba(3,4,8,0.78);
+      backdrop-filter: blur(10px);
+    }
+
+    #detail-panel {
+      position: absolute;
+      inset: 5vh 4vw;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,12,18,0.92);
+      box-shadow: 0 50px 130px rgba(0,0,0,0.65);
+      transform: translateY(16px) scale(0.98);
+      opacity: 0;
+      transition: transform 220ms ease, opacity 220ms ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #detail.open #detail-panel {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    #detail-backdrop-wrap {
+      position: relative;
+      aspect-ratio: 21/8;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.04);
+    }
+
+    #detail-backdrop-wrap::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 70%;
+      background: linear-gradient(to bottom, transparent, rgba(10,12,18,0.98));
+      pointer-events: none;
+    }
+
+    #detail-backdrop {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    #detail-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      z-index: 2;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.35);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    #detail-body {
+      overflow-y: auto;
+      padding: 26px 34px 38px;
+    }
+
+    #detail-title {
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin: 0 0 10px;
+    }
+
+    #detail-tagline {
+      color: var(--text-3);
+      font-size: 17px;
+      font-style: italic;
+      margin-bottom: 18px;
+    }
+
+    #detail-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    #detail-reasons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .reason-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 15px 16px;
+    }
+
+    .reason-box .label {
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 10px;
+      margin-bottom: 8px;
+    }
+
+    .reason-box .value {
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    #detail-overview {
+      color: var(--text-2);
+      line-height: 1.75;
+      font-size: 16px;
+      margin-bottom: 26px;
+    }
+
+    #detail-cast-title {
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    #detail-cast {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .cast-chip {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-2);
+      font-size: 14px;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(16px);
+      z-index: 120;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(18px);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 12px;
+      opacity: 0;
+      transition: opacity 180ms ease, transform 180ms ease;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 920px) {
+      :root {
+        --row-pad: 24px;
+        --card-w: 280px;
+        --card-gap: 14px;
+      }
+
+      .nav-help {
+        display: none;
+      }
+
+      #detail-reasons {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="bgA"></div>
-  <div id="bgB"></div>
-  <div class="overlay"></div>
+  <div id="bg"></div>
+  <div id="bg-next"></div>
+  <div id="bg-overlay"></div>
 
-  <div class="app">
-    <div class="topbar">
-      <div>CineView TV</div>
-      <div>TV-first movie discovery</div>
-    </div>
+  <div id="app">
+    <nav id="nav">
+      <div class="brand">Movie<span>Browser</span></div>
+      <div class="nav-help">
+        <span class="key"><b>↑↓</b> rows</span>
+        <span class="key"><b>←→</b> browse</span>
+        <span class="key"><b>Enter</b> details</span>
+        <span class="key"><b>Esc</b> close</span>
+      </div>
+    </nav>
 
-    <div class="viewport" id="viewport">
-      <section class="hero">
-        <div>
-          <div class="eyebrow" id="heroLabel">Best pick for tonight</div>
-          <h1 class="title" id="heroTitle">Loading…</h1>
-          <div class="meta" id="heroMeta"></div>
-          <div class="overview" id="heroOverview"></div>
+    <section id="hero">
+      <div id="hero-content">
+        <div class="eyebrow" id="hero-eyebrow">Best pick for tonight</div>
+        <h1 id="hero-title">Loading movies...</h1>
+        <div id="hero-sub">Please wait while we load your TV browsing experience.</div>
+        <div id="hero-meta"></div>
+        <div id="hero-tags"></div>
+        <div class="hero-actions">
+          <button class="btn primary" id="hero-open">Open details</button>
+          <button class="btn" id="hero-next">Next suggestion</button>
         </div>
-        <aside class="decision">
-          <h2 id="decisionTitle">Make browsing feel like choosing</h2>
-          <p id="decisionCopy">This TV layout leads with intent, not genres. It starts with one strong recommendation, then gives a few meaningful paths instead of endless rows.</p>
-          <div class="chips" id="decisionChips"></div>
-        </aside>
-      </section>
+      </div>
+    </section>
 
-      <main id="rails"></main>
-    </div>
+    <section id="rows"></section>
+    <div id="status" class="loading"></div>
   </div>
 
-  <div class="help">↑↓ rows &nbsp; ←→ browse &nbsp; Enter details &nbsp; Esc close</div>
+  <div id="detail">
+    <div id="detail-panel">
+      <div id="detail-backdrop-wrap">
+        <img id="detail-backdrop" alt="">
+        <button id="detail-close" aria-label="Close">×</button>
+      </div>
+      <div id="detail-body">
+        <h2 id="detail-title"></h2>
+        <div id="detail-tagline"></div>
+        <div id="detail-pills"></div>
 
-  <div class="modal" id="modal">
-    <div class="panel">
-      <img id="modalImg" alt="">
-      <div class="panel-body">
-        <div class="grid-2">
-          <div>
-            <h3 id="modalTitle"></h3>
-            <div class="meta" id="modalMeta"></div>
-            <p class="overview" style="display:block;max-width:none;-webkit-line-clamp:unset" id="modalOverview"></p>
+        <div id="detail-reasons">
+          <div class="reason-box">
+            <div class="label">Why this fits</div>
+            <div class="value" id="reason-fit">A strong match for the current browsing lane.</div>
           </div>
-          <div>
-            <div class="eyebrow">Why it fits now</div>
-            <div class="choices" id="modalChoices"></div>
+          <div class="reason-box">
+            <div class="label">Best for</div>
+            <div class="value" id="reason-bestfor">A focused evening watch.</div>
+          </div>
+          <div class="reason-box">
+            <div class="label">Commitment</div>
+            <div class="value" id="reason-commit">Comfortable TV session.</div>
           </div>
         </div>
+
+        <div id="detail-overview"></div>
+
+        <div id="detail-cast-title">Top cast</div>
+        <div id="detail-cast"></div>
       </div>
     </div>
   </div>
 
-<script>
-const API_BASE = "https://REPLACE_WITH_WORKER_URL";
-const IMG = (p, size='w780') => p ? `https://image.tmdb.org/t/p/${size}${p}` : '';
-const BACK = (p, size='w1280') => p ? `https://image.tmdb.org/t/p/${size}${p}` : '';
+  <div id="toast"></div>
 
-const INTENTS = [
-  {
-    key: 'tonight',
-    title: 'Best pick for tonight',
-    subtitle: 'A strong, accessible recommendation to start fast',
-    endpoint: '/api/intent/tonight',
-    choices: ['Strong first choice', 'Accessible but high quality', 'Works well on a relaxed evening']
-  },
-  {
-    key: 'short',
-    title: 'Under 100 minutes',
-    subtitle: 'Low-commitment films that still feel worth it',
-    endpoint: '/api/intent/short',
-    choices: ['Easy to finish tonight', 'Good pacing', 'Less browsing, more watching']
-  },
-  {
-    key: 'beautiful',
-    title: 'Slow and beautiful',
-    subtitle: 'Visually rich films with a calmer rhythm',
-    endpoint: '/api/intent/beautiful',
-    choices: ['Visual mood first', 'Better for quieter nights', 'Great when you want atmosphere']
-  },
-  {
-    key: 'tense',
-    title: 'High-stakes thrill',
-    subtitle: 'Tense, propulsive films with momentum',
-    endpoint: '/api/intent/tense',
-    choices: ['Fast energy', 'Clear hook', 'Good group-watch option']
-  }
-];
+  <script>
+    const API_BASE = "https://movie-browsing.hanig.workers.dev";
+    const IMG = (p, size = "w780") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
+    const BACK = (p, size = "w1280") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
 
-const state = {
-  rails: [],
-  row: 0,
-  colByRow: {},
-  detailsCache: new Map(),
-  bgUrl: '',
-  modalOpen: false,
-};
+    const LANES = [
+      {
+        key: "tonight",
+        title: "Best pick for tonight",
+        subtitle: "Confident, broad-appeal choices for an easy start",
+        reason: "A strong all-round recommendation for a relaxed evening."
+      },
+      {
+        key: "short",
+        title: "Under 100 minutes",
+        subtitle: "High-value films when you want something tighter",
+        reason: "A shorter commitment without feeling slight."
+      },
+      {
+        key: "beautiful",
+        title: "Slow and beautiful",
+        subtitle: "Atmospheric, emotional, and visually absorbing picks",
+        reason: "Better for a patient, immersive mood."
+      },
+      {
+        key: "thrill",
+        title: "High-stakes thrill",
+        subtitle: "Tension, pace, and urgency for a more intense night",
+        reason: "Ideal when you want energy and momentum."
+      }
+    ];
 
-async function api(path) {
-  const res = await fetch(API_BASE + path);
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return res.json();
-}
+    let rows = [];
+    let focusedRow = 0;
+    let focusedCol = {};
+    let detailOpen = false;
+    let heroMovie = null;
+    let heroLaneTitle = "";
+    let ambientUrl = "";
 
-function reasonFor(movie, intentKey) {
-  const year = Number((movie.release_date || '').slice(0,4));
-  const score = movie.vote_average || 0;
-  if (intentKey === 'short') return (movie.runtime && movie.runtime <= 100) ? 'Short enough for tonight' : 'Feels brisk for a feature';
-  if (intentKey === 'beautiful') return score >= 7.2 ? 'Strong craft and atmosphere' : 'Mood-led visual pick';
-  if (intentKey === 'tense') return score >= 7 ? 'High momentum thriller energy' : 'Built for suspense';
-  if (year >= 2020) return 'Recent and easy to enter';
-  return 'Reliable first recommendation';
-}
+    const rowsEl = document.getElementById("rows");
+    const statusEl = document.getElementById("status");
+    const toastEl = document.getElementById("toast");
 
-function setBg(url) {
-  if (!url || url === state.bgUrl) return;
-  state.bgUrl = url;
-  const a = document.getElementById('bgA');
-  const b = document.getElementById('bgB');
-  b.style.backgroundImage = `url(${url})`;
-  b.style.opacity = '1';
-  setTimeout(() => {
-    a.style.backgroundImage = `url(${url})`;
-    b.style.opacity = '0';
-  }, 750);
-}
+    const bg = document.getElementById("bg");
+    const bgNext = document.getElementById("bg-next");
 
-function renderHero(movie, rail) {
-  document.getElementById('heroLabel').textContent = rail.title;
-  document.getElementById('heroTitle').textContent = movie.title || 'Untitled';
-  document.getElementById('heroOverview').textContent = movie.overview || 'No overview available.';
-  document.getElementById('decisionTitle').textContent = rail.title;
-  document.getElementById('decisionCopy').textContent = rail.subtitle;
-  document.getElementById('decisionChips').innerHTML = rail.choices.map(c => `<span class="chip">${c}</span>`).join('');
-  document.getElementById('heroMeta').innerHTML = [
-    `<span class="pill gold">★ ${(movie.vote_average || 0).toFixed(1)}</span>`,
-    `<span class="pill">${(movie.release_date || '').slice(0,4) || '—'}</span>`,
-    movie.runtime ? `<span class="pill">${movie.runtime} min</span>` : ''
-  ].join('');
-  setBg(BACK(movie.backdrop_path));
-}
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastEl.classList.remove("show"), 1800);
+    }
 
-function createCard(movie, intentKey) {
-  const el = document.createElement('article');
-  el.className = 'card';
-  el.innerHTML = `
-    <img class="poster" src="${IMG(movie.backdrop_path) || IMG(movie.poster_path, 'w500')}" alt="">
-    <div class="card-body">
-      <div class="card-title">${movie.title}</div>
-      <div class="card-meta"><span>${(movie.release_date || '').slice(0,4) || '—'}</span><span>★ ${(movie.vote_average || 0).toFixed(1)}</span></div>
-      <div class="reason">${reasonFor(movie, intentKey)}</div>
-    </div>`;
-  return el;
-}
+    function setAmbient(url) {
+      if (!url || url === ambientUrl) return;
+      ambientUrl = url;
+      bgNext.style.backgroundImage = `url("${url}")`;
+      bgNext.style.opacity = "1";
+      setTimeout(() => {
+        bg.style.backgroundImage = `url("${url}")`;
+        bgNext.style.opacity = "0";
+      }, 650);
+    }
 
-function renderRails() {
-  const root = document.getElementById('rails');
-  root.innerHTML = '';
-  state.rails.forEach((rail, ri) => {
-    const section = document.createElement('section');
-    section.className = 'rail-section';
-    section.innerHTML = `
-      <div class="rail-head">
-        <div>
-          <div class="rail-title">${rail.title}</div>
-          <div class="rail-sub">${rail.subtitle}</div>
+    function safeYear(movie) {
+      return movie.release_date ? movie.release_date.slice(0, 4) : "—";
+    }
+
+    function runtimeText(runtime) {
+      if (!runtime) return "Runtime unknown";
+      return `${runtime} min`;
+    }
+
+    function voteText(movie) {
+      return movie.vote_average ? `★ ${movie.vote_average.toFixed(1)}` : "★ —";
+    }
+
+    function makeReasonText(lane, movie) {
+      if (lane.key === "short") return "Short, efficient, and still highly watchable.";
+      if (lane.key === "beautiful") return "Best when you want mood, texture, and atmosphere.";
+      if (lane.key === "thrill") return "Fast, tense, and built for momentum.";
+      return "A reliable, accessible pick with strong broad appeal.";
+    }
+
+    function bestForText(lane) {
+      if (lane.key === "short") return "A weeknight or lower-energy evening.";
+      if (lane.key === "beautiful") return "Watching with patience and full attention.";
+      if (lane.key === "thrill") return "A more alert, edge-of-seat session.";
+      return "A balanced movie night without overthinking it.";
+    }
+
+    function commitmentText(movie) {
+      if (!movie.runtime) return "Comfortable TV session.";
+      if (movie.runtime <= 100) return "Low commitment.";
+      if (movie.runtime <= 130) return "Moderate commitment.";
+      return "Longer sit-down feature.";
+    }
+
+    async function api(path) {
+      const res = await fetch(`${API_BASE}${path}`);
+      if (!res.ok) {
+        throw new Error(`API error ${res.status}`);
+      }
+      return res.json();
+    }
+
+    async function fetchLane(lane) {
+      const data = await api(`/api/browse?intent=${encodeURIComponent(lane.key)}`);
+      const results = Array.isArray(data.results) ? data.results.filter(m => m && (m.backdrop_path || m.poster_path)) : [];
+      return results.slice(0, 18);
+    }
+
+    async function fetchMovie(id) {
+      return api(`/api/movie?id=${encodeURIComponent(id)}`);
+    }
+
+    function buildCard(movie, lane, rowIndex, colIndex) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.dataset.row = rowIndex;
+      card.dataset.col = colIndex;
+
+      const image = movie.backdrop_path
+        ? IMG(movie.backdrop_path, "w780")
+        : IMG(movie.poster_path, "w500");
+
+      card.innerHTML = `
+        <div class="card-image-wrap">
+          ${image ? `<img src="${image}" alt="${escapeHtml(movie.title || "")}" loading="lazy">` : ""}
         </div>
-        <div class="rail-sub">${rail.movies.length} options</div>
-      </div>
-      <div class="rail-wrap"><div class="rail"></div></div>`;
+        <div class="card-body">
+          <div class="card-title">${escapeHtml(movie.title || "Untitled")}</div>
+          <div class="card-meta">
+            <span>${safeYear(movie)}</span>
+            <span class="card-rating">${voteText(movie)}</span>
+          </div>
+          <div class="card-reason">${escapeHtml(makeReasonText(lane, movie))}</div>
+        </div>
+      `;
 
-    const railEl = section.querySelector('.rail');
-    rail.movies.forEach(m => railEl.appendChild(createCard(m, rail.key)));
-    rail.trackEl = railEl;
-    rail.sectionEl = section;
-    rail.wrapEl = section.querySelector('.rail-wrap');
-    root.appendChild(section);
-  });
-}
+      card.addEventListener("mouseenter", () => {
+        if (detailOpen) return;
+        focusedRow = rowIndex;
+        focusedCol[rowIndex] = colIndex;
+        applyFocus(false);
+      });
 
-function applyFocus(scrollSection=true) {
-  document.querySelectorAll('.card.focused').forEach(el => el.classList.remove('focused'));
-  document.querySelectorAll('.rail-section.active').forEach(el => el.classList.remove('active'));
-  const rail = state.rails[state.row];
-  if (!rail) return;
-  const col = Math.max(0, Math.min(state.colByRow[state.row] || 0, rail.movies.length - 1));
-  state.colByRow[state.row] = col;
-  const card = rail.trackEl.children[col];
-  if (card) card.classList.add('focused');
-  rail.sectionEl.classList.add('active');
+      card.addEventListener("click", () => {
+        focusedRow = rowIndex;
+        focusedCol[rowIndex] = colIndex;
+        applyFocus(false);
+        openDetailFromFocus();
+      });
 
-  const offset = Math.max(0, col * (card.offsetWidth + 18) - rail.wrapEl.clientWidth * 0.22);
-  rail.trackEl.style.transform = `translateX(-${offset}px)`;
-  const movie = rail.movies[col];
-  renderHero(movie, rail);
-  if (scrollSection) rail.sectionEl.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-}
+      return card;
+    }
 
-async function openModal() {
-  const rail = state.rails[state.row];
-  const movie = rail.movies[state.colByRow[state.row] || 0];
-  let full = state.detailsCache.get(movie.id);
-  if (!full) {
-    full = await api(`/api/movie/${movie.id}`);
-    state.detailsCache.set(movie.id, full);
-  }
-  document.getElementById('modalImg').src = BACK(full.backdrop_path) || IMG(full.poster_path);
-  document.getElementById('modalTitle').textContent = full.title;
-  document.getElementById('modalOverview').textContent = full.overview || 'No overview available.';
-  document.getElementById('modalMeta').innerHTML = [
-    `<span class="pill gold">★ ${(full.vote_average || 0).toFixed(1)}</span>`,
-    `<span class="pill">${(full.release_date || '').slice(0,4) || '—'}</span>`,
-    full.runtime ? `<span class="pill">${full.runtime} min</span>` : '',
-    full.vote_count ? `<span class="pill">${full.vote_count.toLocaleString()} votes</span>` : ''
-  ].join('');
-  document.getElementById('modalChoices').innerHTML = [
-    `Watch this if you want a ${rail.key === 'tense' ? 'tense, energetic' : rail.key === 'beautiful' ? 'visually rich, quieter' : rail.key === 'short' ? 'short, easy' : 'well-rounded'} film tonight.`,
-    `Best for ${rail.subtitle.toLowerCase()}.`,
-    `If not this, move sideways in the same row for a nearby alternative.`
-  ].map(t => `<div class="choice"><strong>Decision note</strong>${t}</div>`).join('');
-  state.modalOpen = true;
-  document.getElementById('modal').classList.add('open');
-}
+    function buildRow(lane, movies, rowIndex) {
+      const section = document.createElement("section");
+      section.className = "row";
 
-function closeModal() {
-  state.modalOpen = false;
-  document.getElementById('modal').classList.remove('open');
-}
+      const header = document.createElement("div");
+      header.className = "row-header";
+      header.innerHTML = `
+        <div class="row-title">${escapeHtml(lane.title)}</div>
+        <div class="row-line"></div>
+      `;
 
-document.addEventListener('keydown', (e) => {
-  if (state.modalOpen) {
-    if (e.key === 'Escape' || e.key === 'Backspace') closeModal();
-    return;
-  }
-  const rail = state.rails[state.row];
-  if (!rail) return;
-  const col = state.colByRow[state.row] || 0;
-  if (e.key === 'ArrowDown') { e.preventDefault(); if (state.row < state.rails.length - 1) state.row++; applyFocus(); }
-  if (e.key === 'ArrowUp') { e.preventDefault(); if (state.row > 0) state.row--; applyFocus(); }
-  if (e.key === 'ArrowRight') { e.preventDefault(); if (col < rail.movies.length - 1) state.colByRow[state.row] = col + 1; applyFocus(false); }
-  if (e.key === 'ArrowLeft') { e.preventDefault(); if (col > 0) state.colByRow[state.row] = col - 1; applyFocus(false); }
-  if (e.key === 'Enter') { e.preventDefault(); openModal(); }
-});
-document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+      const outer = document.createElement("div");
+      outer.className = "row-track-outer";
 
-async function init() {
-  const rails = await Promise.all(INTENTS.map(async intent => {
-    const payload = await api(intent.endpoint);
-    const movies = payload.results || [];
-    const enriched = await Promise.all(movies.slice(0, 12).map(async m => {
-      if (m.runtime) return m;
+      const wrap = document.createElement("div");
+      wrap.className = "row-wrap";
+
+      const track = document.createElement("div");
+      track.className = "row-track";
+
+      movies.forEach((movie, colIndex) => {
+        track.appendChild(buildCard(movie, lane, rowIndex, colIndex));
+      });
+
+      wrap.appendChild(track);
+      outer.appendChild(wrap);
+      section.appendChild(header);
+      section.appendChild(outer);
+
+      rowsEl.appendChild(section);
+
+      return {
+        lane,
+        movies,
+        section,
+        wrap,
+        track
+      };
+    }
+
+    function currentMovie() {
+      const row = rows[focusedRow];
+      if (!row) return null;
+      const col = Math.max(0, Math.min(focusedCol[focusedRow] || 0, row.movies.length - 1));
+      return row.movies[col] || null;
+    }
+
+    function applyFocus(scrollIntoView = true) {
+      document.querySelectorAll(".card.focused").forEach(el => el.classList.remove("focused"));
+      document.querySelectorAll(".row.active").forEach(el => el.classList.remove("active"));
+
+      const row = rows[focusedRow];
+      if (!row) return;
+
+      if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+
+      const maxCol = row.movies.length - 1;
+      focusedCol[focusedRow] = Math.max(0, Math.min(focusedCol[focusedRow], maxCol));
+
+      const col = focusedCol[focusedRow];
+      const card = row.track.children[col];
+      if (!card) return;
+
+      row.section.classList.add("active");
+      card.classList.add("focused");
+
+      const cardWidth = card.getBoundingClientRect().width + parseInt(getComputedStyle(row.track).gap || 18, 10);
+      const wrapWidth = row.wrap.clientWidth;
+      const targetX = Math.max(0, col * cardWidth - (wrapWidth / 2) + (card.getBoundingClientRect().width / 2));
+      row.track.style.transform = `translateX(-${targetX}px)`;
+
+      if (scrollIntoView) {
+        row.section.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      const movie = currentMovie();
+      if (movie) {
+        updateHero(movie, row.lane);
+      }
+    }
+
+    function updateHero(movie, lane) {
+      heroMovie = movie;
+      heroLaneTitle = lane.title;
+
+      document.getElementById("hero-eyebrow").textContent = lane.title;
+      document.getElementById("hero-title").textContent = movie.title || "Untitled";
+      document.getElementById("hero-sub").textContent =
+        movie.overview || lane.subtitle || "A curated recommendation for this lane.";
+
+      document.getElementById("hero-meta").innerHTML = `
+        <span class="pill gold">${voteText(movie)}</span>
+        <span class="pill">${safeYear(movie)}</span>
+        <span class="pill">${lane.subtitle}</span>
+      `;
+
+      document.getElementById("hero-tags").innerHTML = `
+        <span class="pill">${makeReasonText(lane, movie)}</span>
+        <span class="pill">${bestForText(lane)}</span>
+      `;
+
+      const bgUrl = BACK(movie.backdrop_path || movie.poster_path, "w1280");
+      if (bgUrl) setAmbient(bgUrl);
+    }
+
+    async function openDetailFromFocus() {
+      const movie = currentMovie();
+      const row = rows[focusedRow];
+      if (!movie || !row) return;
+
       try {
-        const full = await api(`/api/movie/${m.id}`);
-        return {...m, runtime: full.runtime};
-      } catch { return m; }
-    }));
-    return {...intent, movies: enriched};
-  }));
-  state.rails = rails;
-  state.colByRow = Object.fromEntries(rails.map((_, i) => [i, 0]));
-  renderRails();
-  applyFocus(false);
-}
-init().catch(err => {
-  document.getElementById('heroTitle').textContent = 'Setup required';
-  document.getElementById('heroOverview').textContent = 'Set your Cloudflare Worker URL in index.html and deploy the Worker with a TMDB secret.';
-  console.error(err);
-});
-</script>
+        detailOpen = true;
+        document.getElementById("detail").classList.add("open");
+
+        document.getElementById("detail-title").textContent = "Loading...";
+        document.getElementById("detail-tagline").textContent = "";
+        document.getElementById("detail-pills").innerHTML = "";
+        document.getElementById("detail-overview").textContent = "";
+        document.getElementById("detail-cast").innerHTML = "";
+        document.getElementById("detail-backdrop").src = "";
+
+        const full = await fetchMovie(movie.id);
+
+        document.getElementById("detail-title").textContent = full.title || movie.title || "Untitled";
+        document.getElementById("detail-tagline").textContent = full.tagline || row.lane.subtitle || "";
+        document.getElementById("detail-pills").innerHTML = `
+          <span class="pill gold">${voteText(full)}</span>
+          <span class="pill">${safeYear(full)}</span>
+          <span class="pill">${runtimeText(full.runtime)}</span>
+          <span class="pill">${full.vote_count ? `${full.vote_count.toLocaleString()} votes` : "Votes unavailable"}</span>
+        `;
+
+        document.getElementById("reason-fit").textContent = makeReasonText(row.lane, full);
+        document.getElementById("reason-bestfor").textContent = bestForText(row.lane);
+        document.getElementById("reason-commit").textContent = commitmentText(full);
+
+        document.getElementById("detail-overview").textContent =
+          full.overview || "No synopsis available.";
+
+        const cast = (full.credits && Array.isArray(full.credits.cast)) ? full.credits.cast.slice(0, 8) : [];
+        document.getElementById("detail-cast").innerHTML = cast.length
+          ? cast.map(person => `<div class="cast-chip">${escapeHtml(person.name)}${person.character ? ` · ${escapeHtml(person.character)}` : ""}</div>`).join("")
+          : `<div class="cast-chip">Cast unavailable</div>`;
+
+        const backdrop = BACK(full.backdrop_path || full.poster_path, "w1280");
+        if (backdrop) {
+          document.getElementById("detail-backdrop").src = backdrop;
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Could not load movie details");
+      }
+    }
+
+    function closeDetail() {
+      detailOpen = false;
+      document.getElementById("detail").classList.remove("open");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function init() {
+      try {
+        statusEl.textContent = "Loading curated lanes...";
+        rowsEl.innerHTML = "";
+
+        const laneResults = await Promise.all(
+          LANES.map(async lane => ({
+            lane,
+            movies: await fetchLane(lane)
+          }))
+        );
+
+        rows = laneResults
+          .filter(x => x.movies && x.movies.length)
+          .map((x, i) => buildRow(x.lane, x.movies, i));
+
+        if (!rows.length) {
+          statusEl.textContent = "No movies could be loaded.";
+          return;
+        }
+
+        focusedRow = 0;
+        focusedCol = { 0: 0 };
+        applyFocus(false);
+        statusEl.textContent = "";
+      } catch (err) {
+        console.error(err);
+        statusEl.className = "error";
+        statusEl.textContent = "Could not load data from the Worker. Check the Worker code, TMDB key, and CORS settings.";
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (detailOpen) {
+        if (e.key === "Escape" || e.key === "Backspace") {
+          e.preventDefault();
+          closeDetail();
+        }
+        return;
+      }
+
+      if (!rows.length) return;
+
+      const row = rows[focusedRow];
+      const col = focusedCol[focusedRow] || 0;
+
+      switch (e.key) {
+        case "ArrowRight":
+          e.preventDefault();
+          if (col < row.movies.length - 1) {
+            focusedCol[focusedRow] = col + 1;
+            applyFocus(false);
+          }
+          break;
+
+        case "ArrowLeft":
+          e.preventDefault();
+          if (col > 0) {
+            focusedCol[focusedRow] = col - 1;
+            applyFocus(false);
+          }
+          break;
+
+        case "ArrowDown":
+          e.preventDefault();
+          if (focusedRow < rows.length - 1) {
+            focusedRow += 1;
+            if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+            applyFocus(true);
+          }
+          break;
+
+        case "ArrowUp":
+          e.preventDefault();
+          if (focusedRow > 0) {
+            focusedRow -= 1;
+            if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+            applyFocus(true);
+          }
+          break;
+
+        case "Enter":
+          e.preventDefault();
+          openDetailFromFocus();
+          break;
+      }
+    });
+
+    document.getElementById("detail-close").addEventListener("click", closeDetail);
+    document.getElementById("detail").addEventListener("click", (e) => {
+      if (e.target.id === "detail") closeDetail();
+    });
+
+    document.getElementById("hero-open").addEventListener("click", () => {
+      openDetailFromFocus();
+    });
+
+    document.getElementById("hero-next").addEventListener("click", () => {
+      const row = rows[focusedRow];
+      if (!row) return;
+      const col = focusedCol[focusedRow] || 0;
+      focusedCol[focusedRow] = (col + 1) % row.movies.length;
+      applyFocus(false);
+    });
+
+    init();
+  </script>
 </body>
 </html>
