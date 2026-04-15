@@ -1,1009 +1,836 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Movie Browser TV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #06070b;
-      --panel: rgba(255,255,255,.07);
-      --panel-hi: rgba(255,255,255,.12);
-      --border: rgba(255,255,255,.10);
-      --border-hi: rgba(255,255,255,.32);
-      --text: rgba(255,255,255,.96);
-      --text-2: rgba(255,255,255,.72);
-      --text-3: rgba(255,255,255,.42);
-      --gold: #ffd54a;
-      --row-pad: 56px;
-      --card-w: 360px;
-      --card-gap: 18px;
-      --radius: 16px;
-      --nav-h: 72px;
+      --bg:#06070b;
+      --panel:rgba(255,255,255,.07);
+      --panel-hi:rgba(255,255,255,.13);
+      --border:rgba(255,255,255,.10);
+      --border-hi:rgba(255,255,255,.36);
+      --text:rgba(255,255,255,.96);
+      --text-2:rgba(255,255,255,.65);
+      --text-3:rgba(255,255,255,.38);
+      --gold:#ffd54a;
+      --pad:56px;
+      --card-w:340px;
+      --card-gap:16px;
+      --nav-h:68px;
+      --radius:14px;
     }
-
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
-    body {
-      font-family: "DM Sans", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      overflow-y: auto;
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:auto}
+    body{
+      font-family:"DM Sans",sans-serif;
+      background:var(--bg);color:var(--text);
+      overflow-x:hidden;overflow-y:scroll;
+      outline:none;
     }
 
     /* ── AMBIENT ── */
-    #bg, #bg-next {
-      position: fixed;
-      inset: -80px;
-      background-size: cover;
-      background-position: center;
-      transform: scale(1.12);
-      filter: blur(80px) saturate(1.2) brightness(.26);
-      z-index: 0;
+    #bg,#bg-next{
+      position:fixed;inset:-80px;
+      background-size:cover;background-position:center;
+      transform:scale(1.12);
+      filter:blur(85px) saturate(1.3) brightness(.25);
+      z-index:0;will-change:opacity;
     }
-    #bg-next { opacity: 0; transition: opacity .8s ease; }
-    #bg-overlay {
-      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    #bg-next{opacity:0;transition:opacity .9s ease}
+    #bg-veil{
+      position:fixed;inset:0;z-index:1;pointer-events:none;
       background:
-        radial-gradient(ellipse 85% 55% at 50% 0%, rgba(20,24,34,.18), rgba(6,7,11,.92)),
-        linear-gradient(to bottom, rgba(6,7,11,.35), rgba(6,7,11,.65) 35%, rgba(6,7,11,1) 100%);
+        radial-gradient(ellipse 90% 55% at 50% 0%,rgba(6,7,11,.15),rgba(6,7,11,.9)),
+        linear-gradient(to bottom,rgba(6,7,11,.3),rgba(6,7,11,.6) 40%,rgba(6,7,11,1) 100%);
     }
-    body::after {
-      content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none;
-      opacity: .02;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
-    #app { position: relative; z-index: 5; min-height: 100vh; }
 
     /* ── NAV ── */
-    #nav {
-      position: sticky; top: 0; z-index: 30;
-      height: var(--nav-h);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 var(--row-pad);
-      background: rgba(6,7,11,.55);
-      backdrop-filter: blur(24px);
-      border-bottom: 1px solid rgba(255,255,255,.08);
+    #nav{
+      position:sticky;top:0;z-index:50;
+      height:var(--nav-h);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 var(--pad);
+      background:rgba(6,7,11,.7);
+      backdrop-filter:blur(28px);
+      border-bottom:1px solid rgba(255,255,255,.07);
     }
-    .brand { font-size: 28px; font-weight: 700; letter-spacing: -.03em; }
-    .brand span { color: var(--text-3); font-weight: 400; }
-    .nav-help { display: flex; gap: 12px; flex-wrap: wrap; color: var(--text-3); font-size: 12px; }
-    .key {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 7px 10px; border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.04);
+    .brand{font-size:26px;font-weight:700;letter-spacing:-.03em}
+    .brand span{color:var(--text-3);font-weight:400}
+    .nav-keys{display:flex;gap:10px;color:var(--text-3);font-size:12px}
+    .kc{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
     }
-    .key b {
-      display: inline-block; min-width: 24px; padding: 3px 7px;
-      border-radius: 8px; background: rgba(255,255,255,.08);
-      color: var(--text-2); font-weight: 700; text-align: center;
+    .kc b{
+      display:inline-block;min-width:22px;padding:2px 6px;
+      border-radius:7px;background:rgba(255,255,255,.1);
+      color:var(--text-2);font-weight:700;text-align:center;font-size:11px;
     }
 
     /* ── HERO ── */
-    #hero {
-      position: relative; min-height: 72vh;
-      display: flex; align-items: end;
-      padding: 40px var(--row-pad) 48px; overflow: hidden;
+    #hero{
+      position:relative;min-height:68vh;
+      display:flex;align-items:flex-end;
+      padding:40px var(--pad) 52px;
     }
-    #hero-image {
-      position: absolute; inset: 0;
-      background-size: cover; background-position: center;
-      opacity: .33; transform: scale(1.03);
-      transition: background-image .4s ease, opacity .4s ease;
+    #hero-bg{
+      position:absolute;inset:0;
+      background-size:cover;background-position:center;
+      opacity:.35;
+      transition:background-image .5s ease;
     }
-    #hero-image::after {
-      content: ""; position: absolute; inset: 0;
+    #hero-bg::after{
+      content:"";position:absolute;inset:0;
       background:
-        linear-gradient(to right, rgba(6,7,11,.88) 0%, rgba(6,7,11,.55) 38%, rgba(6,7,11,.20) 68%, rgba(6,7,11,.65) 100%),
-        linear-gradient(to top, rgba(6,7,11,1) 0%, rgba(6,7,11,.45) 45%, rgba(6,7,11,.2) 100%);
+        linear-gradient(to right,rgba(6,7,11,.92) 0%,rgba(6,7,11,.5) 40%,rgba(6,7,11,.15) 70%,rgba(6,7,11,.6) 100%),
+        linear-gradient(to top,rgba(6,7,11,1) 0%,rgba(6,7,11,.4) 50%,rgba(6,7,11,.15) 100%);
     }
-    #hero-content { position: relative; z-index: 2; width: min(900px, 100%); }
-    .eyebrow {
-      color: var(--text-3); text-transform: uppercase; letter-spacing: .18em;
-      font-size: 12px; margin-bottom: 18px;
-      display: flex; align-items: center; gap: 12px;
+    #hero-body{position:relative;z-index:2;max-width:820px}
+    #hero-label{
+      color:var(--text-3);text-transform:uppercase;letter-spacing:.18em;
+      font-size:12px;margin-bottom:16px;
+      display:flex;align-items:center;gap:12px;
     }
-    .eyebrow::before {
-      content: ""; display: inline-block; width: 28px; height: 1px;
-      background: rgba(255,255,255,.22);
+    #hero-label::before{content:"";width:26px;height:1px;background:rgba(255,255,255,.2)}
+    #hero-title{
+      font-size:clamp(38px,5.5vw,80px);line-height:.95;
+      letter-spacing:-.04em;margin-bottom:18px;
+      text-shadow:0 6px 36px rgba(0,0,0,.5);
+      min-height:1em;
     }
-    #hero-title {
-      font-size: clamp(42px,6vw,86px); line-height: .94;
-      letter-spacing: -.045em; margin: 0 0 20px;
-      text-shadow: 0 8px 40px rgba(0,0,0,.45);
+    #hero-overview{
+      color:var(--text-2);font-size:clamp(15px,1.6vw,19px);
+      line-height:1.55;max-width:680px;margin-bottom:20px;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
     }
-    #hero-sub {
-      color: var(--text-2); font-size: clamp(17px,1.8vw,21px);
-      line-height: 1.55; max-width: 760px; margin-bottom: 22px;
+    #hero-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    #hero-cast{
+      font-size:14px;color:var(--text-3);margin-bottom:20px;min-height:18px;
     }
-    #hero-meta, #hero-tags { display: flex; gap: 10px; flex-wrap: wrap; }
-    #hero-meta { margin-bottom: 14px; }
-    #hero-tags { margin-bottom: 22px; }
-    .pill {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 8px 14px; border-radius: 999px;
-      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.10);
-      color: var(--text-2); font-size: 14px; font-weight: 500;
+    .pill{
+      display:inline-flex;align-items:center;
+      padding:7px 13px;border-radius:999px;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);
+      color:var(--text-2);font-size:13px;font-weight:500;
     }
-    .pill.gold { color: var(--gold); border-color: rgba(255,213,74,.25); background: rgba(255,213,74,.07); }
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; }
-    .btn {
-      border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.08);
-      color: var(--text); padding: 14px 18px; border-radius: 12px;
-      font-size: 15px; font-weight: 700; cursor: pointer;
-      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    .pill.gold{color:var(--gold);border-color:rgba(255,213,74,.25);background:rgba(255,213,74,.07)}
+    #hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);
+      color:var(--text);padding:13px 18px;border-radius:12px;
+      font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+      transition:transform 120ms,border-color 120ms,background 120ms;
     }
-    .btn:hover, .btn:focus-visible {
-      transform: translateY(-1px); border-color: rgba(255,255,255,.28);
-      background: rgba(255,255,255,.13); outline: none;
-    }
-    .btn.primary { background: rgba(255,255,255,.95); color: #0c0e14; }
+    .btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.13)}
+    .btn.primary{background:rgba(255,255,255,.94);color:#0c0e14}
+    #hero-trailer-btn{display:none}
 
     /* ── ROWS ── */
-    #rows { padding-bottom: 80px; }
-    .row { margin-bottom: 14px; }
-    .row-header { display: flex; align-items: center; gap: 14px; padding: 0 var(--row-pad) 16px; }
-    .row-title {
-      font-size: 24px; font-weight: 700; letter-spacing: -.03em;
-      color: var(--text-2); transition: color 180ms ease;
+    #rows{position:relative;z-index:5;padding-bottom:80px}
+    .row{margin-bottom:8px}
+    .row-head{display:flex;align-items:center;gap:14px;padding:22px var(--pad) 14px}
+    .row-name{
+      font-size:22px;font-weight:700;letter-spacing:-.03em;
+      color:var(--text-3);transition:color 200ms;white-space:nowrap;
     }
-    .row.active .row-title { color: var(--text); }
-    .row-line { flex: 1; height: 1px; background: rgba(255,255,255,.08); }
-    .row-track-outer { position: relative; }
-    .row-track-outer::after {
-      content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 140px;
-      pointer-events: none;
-      background: linear-gradient(to right, transparent, rgba(6,7,11,.92));
+    .row.active .row-name{color:var(--text)}
+    .row-line{flex:1;height:1px;background:rgba(255,255,255,.07);transition:background 200ms}
+    .row.active .row-line{background:rgba(255,255,255,.14)}
+    .row-loading-dot{
+      width:6px;height:6px;border-radius:50%;
+      background:var(--gold);opacity:0;transition:opacity .3s;flex-shrink:0;
     }
-    .row-wrap { overflow: hidden; padding: 4px var(--row-pad) 30px; }
-    .row-track {
-      display: flex; gap: var(--card-gap); will-change: transform;
-      transition: transform .55s cubic-bezier(.2,.7,.2,1);
+    .row.loading-more .row-loading-dot{opacity:1;animation:pulse 1s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+    /* Right-edge fade — infinite feel */
+    .row-outer{position:relative}
+    .row-outer::after{
+      content:"";position:absolute;top:0;right:0;bottom:0;width:120px;
+      pointer-events:none;z-index:2;
+      background:linear-gradient(to right,transparent,rgba(6,7,11,.9));
+    }
+    .row-wrap{overflow:hidden;padding:6px var(--pad) 28px}
+    .row-track{
+      display:flex;gap:var(--card-gap);
+      transition:transform .45s cubic-bezier(.25,.8,.25,1);
+      will-change:transform;
     }
 
     /* ── CARDS ── */
-    .card {
-      position: relative; width: var(--card-w); flex: 0 0 var(--card-w);
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden;
-      box-shadow: 0 18px 44px rgba(0,0,0,.22);
-      transform: scale(1);
-      transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease, opacity .22s ease;
+    .card{
+      position:relative;flex:0 0 var(--card-w);width:var(--card-w);
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:var(--radius);overflow:hidden;
+      box-shadow:0 14px 38px rgba(0,0,0,.2);
+      transition:transform .2s cubic-bezier(.34,1.4,.64,1),border-color .2s,box-shadow .2s,opacity .2s;
     }
-    .row.active .card:not(.focused) { opacity: .78; }
-    .card.focused {
-      transform: scale(1.06) translateY(-6px);
-      border-color: var(--border-hi); background: var(--panel-hi);
-      box-shadow: 0 28px 70px rgba(0,0,0,.45); z-index: 2;
+    .row.active .card:not(.focused){opacity:.72}
+    .card.focused{
+      transform:scale(1.07) translateY(-7px);
+      border-color:var(--border-hi);background:var(--panel-hi);
+      box-shadow:0 30px 72px rgba(0,0,0,.5);z-index:4;
     }
+    .card-img-wrap{position:relative;aspect-ratio:16/9;background:rgba(255,255,255,.04)}
+    .card-img-wrap::after{
+      content:"";position:absolute;inset:auto 0 0 0;height:45%;
+      background:linear-gradient(to bottom,transparent,rgba(10,12,18,.85));
+      pointer-events:none;z-index:1;
+    }
+    .card img{width:100%;height:100%;object-fit:cover;display:block}
+    .card-video{
+      position:absolute;inset:0;background:#000;
+      opacity:0;transition:opacity .3s;pointer-events:none;z-index:2;
+    }
+    .card-video.on{opacity:1}
+    .card-video iframe{width:100%;height:100%;border:0}
+    .card-body{padding:12px 14px 14px}
+    .card-title{
+      font-size:16px;font-weight:700;letter-spacing:-.02em;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:7px;
+    }
+    .card-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .card-year{font-size:12px;color:var(--text-3)}
+    .card-rating{font-size:12px;font-weight:700;color:var(--gold)}
+    .card-cast{font-size:11px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:15px}
 
-    /* Card image + video overlay */
-    .card-image-wrap {
-      position: relative; aspect-ratio: 16/9;
-      background: rgba(255,255,255,.04);
+    /* ── DETAIL ── */
+    #detail{
+      position:fixed;inset:0;z-index:100;pointer-events:none;
+      background:rgba(3,4,8,0);transition:background .2s,backdrop-filter .2s;
+      backdrop-filter:blur(0px);
     }
-    .card-image-wrap::after {
-      content: ""; position: absolute; inset: auto 0 0 0; height: 50%;
-      background: linear-gradient(to bottom, transparent, rgba(10,12,18,.88));
-      pointer-events: none; z-index: 1;
+    #detail.open{pointer-events:all;background:rgba(3,4,8,.8);backdrop-filter:blur(12px)}
+    #detail-panel{
+      position:absolute;inset:4vh 3.5vw;border-radius:22px;overflow:hidden;
+      border:1px solid rgba(255,255,255,.11);background:rgba(10,12,18,.94);
+      box-shadow:0 48px 120px rgba(0,0,0,.65);
+      transform:translateY(18px) scale(.97);opacity:0;
+      transition:transform .22s ease,opacity .22s ease;
+      display:flex;flex-direction:column;
     }
-    .card img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
+    #detail.open #detail-panel{transform:none;opacity:1}
+    #d-back-wrap{position:relative;aspect-ratio:21/8;flex-shrink:0;background:rgba(255,255,255,.04)}
+    #d-back-wrap::after{
+      content:"";position:absolute;inset:auto 0 0 0;height:72%;
+      background:linear-gradient(to bottom,transparent,rgba(10,12,18,.97));pointer-events:none;
     }
-    .card-video-wrap {
-      position: absolute; inset: 0; background: #000;
-      opacity: 0; transition: opacity .35s ease;
-      pointer-events: none; z-index: 2;
+    #d-backdrop{width:100%;height:100%;object-fit:cover;display:block}
+    #d-close{
+      position:absolute;top:16px;right:16px;z-index:2;
+      width:40px;height:40px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.4);
+      color:#fff;font-size:20px;cursor:pointer;font-family:inherit;
     }
-    .card-video-wrap.playing { opacity: 1; }
-    .card-video-wrap iframe { width: 100%; height: 100%; border: 0; }
-
-    /* Card body */
-    .card-body { padding: 14px 16px 16px; }
-    .card-title {
-      font-size: 17px; font-weight: 700; letter-spacing: -.02em;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 8px;
+    #d-body{overflow-y:auto;padding:24px 32px 36px;flex:1}
+    #d-title{font-size:clamp(28px,3.5vw,50px);line-height:1;letter-spacing:-.04em;margin-bottom:8px}
+    #d-tagline{color:var(--text-3);font-size:16px;font-style:italic;margin-bottom:16px}
+    #d-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+    #d-cast-label{color:var(--text-3);text-transform:uppercase;letter-spacing:.14em;font-size:10px;margin-bottom:10px}
+    #d-cast{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+    .cast-chip{
+      padding:9px 12px;border-radius:10px;
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+      color:var(--text-2);font-size:13px;
     }
-    .card-meta {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 10px; color: var(--text-3); font-size: 13px; margin-bottom: 8px;
-    }
-    .card-rating { color: var(--gold); font-weight: 700; }
-    .card-cast {
-      font-size: 12px; color: var(--text-3);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      min-height: 16px; line-height: 1.4;
-    }
-    .card-reason {
-      font-size: 13px; line-height: 1.45; color: var(--text-2);
-      min-height: 38px;
-      display: -webkit-box; -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2; overflow: hidden;
-    }
-
-    /* ── DETAIL PANEL ── */
-    #detail {
-      position: fixed; inset: 0; z-index: 100;
-      pointer-events: none; background: rgba(3,4,8,0);
-      backdrop-filter: blur(0); transition: background .22s ease, backdrop-filter .22s ease;
-    }
-    #detail.open {
-      pointer-events: all; background: rgba(3,4,8,.78); backdrop-filter: blur(10px);
-    }
-    #detail-panel {
-      position: absolute; inset: 5vh 4vw; border-radius: 24px; overflow: hidden;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(10,12,18,.92);
-      box-shadow: 0 50px 130px rgba(0,0,0,.65);
-      transform: translateY(16px) scale(.98); opacity: 0;
-      transition: transform .22s ease, opacity .22s ease;
-      display: flex; flex-direction: column;
-    }
-    #detail.open #detail-panel { transform: translateY(0) scale(1); opacity: 1; }
-    #detail-backdrop-wrap {
-      position: relative; aspect-ratio: 21/8; flex-shrink: 0;
-      background: rgba(255,255,255,.04);
-    }
-    #detail-backdrop-wrap::after {
-      content: ""; position: absolute; inset: auto 0 0 0; height: 70%;
-      background: linear-gradient(to bottom, transparent, rgba(10,12,18,.98));
-      pointer-events: none;
-    }
-    #detail-backdrop { width: 100%; height: 100%; object-fit: cover; display: block; }
-    #detail-close {
-      position: absolute; top: 18px; right: 18px; z-index: 2;
-      width: 42px; height: 42px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.35);
-      color: white; font-size: 22px; cursor: pointer;
-    }
-    #detail-body { overflow-y: auto; padding: 26px 34px 38px; }
-    #detail-title {
-      font-size: clamp(30px,4vw,52px); line-height: 1;
-      letter-spacing: -.04em; margin: 0 0 10px;
-    }
-    #detail-tagline { color: var(--text-3); font-size: 17px; font-style: italic; margin-bottom: 18px; }
-    #detail-pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
-    #detail-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
-    #detail-reasons {
-      display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
-      gap: 12px; margin-bottom: 28px;
-    }
-    .reason-box {
-      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px; padding: 15px 16px;
-    }
-    .reason-box .label {
-      color: var(--text-3); text-transform: uppercase; letter-spacing: .14em;
-      font-size: 10px; margin-bottom: 8px;
-    }
-    .reason-box .value { color: var(--text); font-size: 15px; line-height: 1.45; }
-    #detail-overview { color: var(--text-2); line-height: 1.75; font-size: 16px; margin-bottom: 26px; }
-    #detail-cast-title {
-      color: var(--text-3); text-transform: uppercase;
-      letter-spacing: .14em; font-size: 12px; margin-bottom: 12px;
-    }
-    #detail-cast { display: flex; gap: 10px; flex-wrap: wrap; }
-    .cast-chip {
-      padding: 10px 12px; border-radius: 12px;
-      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
-      color: var(--text-2); font-size: 14px;
-    }
+    #d-overview{color:var(--text-2);line-height:1.72;font-size:15px}
+    #d-trailer-btn{display:none;margin-bottom:18px}
 
     /* ── VIDEO OVERLAY ── */
-    #video-overlay {
-      position: fixed; inset: 0; z-index: 140;
-      background: rgba(0,0,0,.88); backdrop-filter: blur(8px);
-      display: none; align-items: center; justify-content: center;
+    #vid-overlay{
+      position:fixed;inset:0;z-index:200;
+      background:rgba(0,0,0,.9);backdrop-filter:blur(8px);
+      display:none;align-items:center;justify-content:center;
     }
-    #video-overlay.open { display: flex; }
-    #video-panel {
-      width: min(92vw,1400px); aspect-ratio: 16/9; position: relative;
-      background: #000; border-radius: 18px; overflow: hidden;
-      border: 1px solid rgba(255,255,255,.14);
-      box-shadow: 0 40px 100px rgba(0,0,0,.65);
+    #vid-overlay.open{display:flex}
+    #vid-panel{
+      width:min(94vw,1360px);aspect-ratio:16/9;position:relative;
+      background:#000;border-radius:16px;overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
     }
-    #video-close {
-      position: absolute; top: 14px; right: 14px; z-index: 2;
-      width: 42px; height: 42px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.45);
-      color: #fff; font-size: 22px; cursor: pointer;
+    #vid-close{
+      position:absolute;top:12px;right:12px;z-index:2;
+      width:40px;height:40px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.5);
+      color:#fff;font-size:20px;cursor:pointer;font-family:inherit;
     }
-    #video-frame { width: 100%; height: 100%; border: 0; }
+    #vid-frame{width:100%;height:100%;border:0}
 
-    /* ── TOAST ── */
-    #toast {
-      position: fixed; left: 50%; bottom: 22px;
-      transform: translateX(-50%) translateY(16px); z-index: 120;
-      background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(18px); color: var(--text);
-      padding: 12px 16px; border-radius: 12px;
-      opacity: 0; transition: opacity .18s ease, transform .18s ease;
-      pointer-events: none;
+    /* ── LOADING SCREEN ── */
+    #loading-screen{
+      position:fixed;inset:0;z-index:300;
+      background:var(--bg);
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;gap:20px;
+      transition:opacity .4s ease;
     }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    @media (max-width:920px) {
-      :root { --row-pad: 24px; --card-w: 280px; --card-gap: 14px; }
-      .nav-help { display: none; }
-      #detail-reasons { grid-template-columns: 1fr; }
+    #loading-screen.hidden{opacity:0;pointer-events:none}
+    .spinner{
+      width:36px;height:36px;border-radius:50%;
+      border:2px solid rgba(255,255,255,.1);
+      border-top-color:rgba(255,255,255,.6);
+      animation:spin .7s linear infinite;
     }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-size:14px;color:var(--text-3);letter-spacing:.06em}
   </style>
 </head>
-<body>
-  <div id="bg"></div>
-  <div id="bg-next"></div>
-  <div id="bg-overlay"></div>
+<body tabindex="0">
 
-  <div id="app">
-    <nav id="nav">
-      <div class="brand">Movie<span>Browser</span></div>
-      <div class="nav-help">
-        <span class="key"><b>↑↓</b> rows</span>
-        <span class="key"><b>←→</b> browse</span>
-        <span class="key"><b>Enter</b> details</span>
-        <span class="key"><b>Esc</b> close</span>
-      </div>
-    </nav>
+<div id="bg"></div>
+<div id="bg-next"></div>
+<div id="bg-veil"></div>
 
-    <section id="hero">
-      <div id="hero-image"></div>
-      <div id="hero-content">
-        <div class="eyebrow" id="hero-eyebrow">Best pick for tonight</div>
-        <h1 id="hero-title">Loading movies…</h1>
-        <div id="hero-sub">Please wait while we load your TV browsing experience.</div>
-        <div id="hero-meta"></div>
-        <div id="hero-tags"></div>
-        <div class="hero-actions">
-          <button class="btn primary" id="hero-open">Open details</button>
-          <button class="btn" id="hero-next">Next suggestion</button>
-          <button class="btn" id="hero-trailer" style="display:none;">Watch trailer</button>
-        </div>
-      </div>
-    </section>
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading…</div>
+</div>
 
-    <section id="rows"></section>
-    <div id="status" style="padding:0 var(--row-pad);color:var(--text-3);font-size:15px;"></div>
+<nav id="nav">
+  <div class="brand">Movie<span>Browser</span></div>
+  <div class="nav-keys">
+    <span class="kc"><b>↑↓</b> rows</span>
+    <span class="kc"><b>←→</b> browse</span>
+    <span class="kc"><b>OK</b> details</span>
+    <span class="kc"><b>Back</b> close</span>
   </div>
+</nav>
 
-  <!-- Detail panel -->
-  <div id="detail">
-    <div id="detail-panel">
-      <div id="detail-backdrop-wrap">
-        <img id="detail-backdrop" alt="">
-        <button id="detail-close" aria-label="Close">×</button>
-      </div>
-      <div id="detail-body">
-        <h2 id="detail-title"></h2>
-        <div id="detail-tagline"></div>
-        <div id="detail-pills"></div>
-        <div id="detail-actions">
-          <button class="btn" id="detail-trailer" style="display:none;">Watch trailer</button>
-        </div>
-        <div id="detail-reasons">
-          <div class="reason-box">
-            <div class="label">Why this fits</div>
-            <div class="value" id="reason-fit">A strong match for the current browsing lane.</div>
-          </div>
-          <div class="reason-box">
-            <div class="label">Best for</div>
-            <div class="value" id="reason-bestfor">A focused evening watch.</div>
-          </div>
-          <div class="reason-box">
-            <div class="label">Commitment</div>
-            <div class="value" id="reason-commit">Comfortable TV session.</div>
-          </div>
-        </div>
-        <div id="detail-overview"></div>
-        <div id="detail-cast-title">Top cast</div>
-        <div id="detail-cast"></div>
-      </div>
+<section id="hero">
+  <div id="hero-bg"></div>
+  <div id="hero-body">
+    <div id="hero-label">Tonight's pick</div>
+    <div id="hero-title"></div>
+    <div id="hero-overview"></div>
+    <div id="hero-pills"></div>
+    <div id="hero-cast"></div>
+    <div id="hero-actions">
+      <button class="btn primary" id="hero-open-btn">Open details</button>
+      <button class="btn" id="hero-next-btn">Next →</button>
+      <button class="btn" id="hero-trailer-btn">Watch trailer</button>
     </div>
   </div>
+</section>
 
-  <!-- Full video overlay -->
-  <div id="video-overlay">
-    <div id="video-panel">
-      <button id="video-close" aria-label="Close trailer">×</button>
-      <iframe id="video-frame" src="" title="Trailer"
-        allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+<section id="rows"></section>
+
+<!-- Detail panel -->
+<div id="detail">
+  <div id="detail-panel">
+    <div id="d-back-wrap">
+      <img id="d-backdrop" alt="">
+      <button id="d-close">×</button>
+    </div>
+    <div id="d-body">
+      <h2 id="d-title"></h2>
+      <div id="d-tagline"></div>
+      <div id="d-pills"></div>
+      <button class="btn" id="d-trailer-btn">Watch trailer</button>
+      <div id="d-cast-label">Top cast</div>
+      <div id="d-cast"></div>
+      <div id="d-overview"></div>
     </div>
   </div>
+</div>
 
-  <div id="toast"></div>
+<!-- Video overlay -->
+<div id="vid-overlay">
+  <div id="vid-panel">
+    <button id="vid-close">×</button>
+    <iframe id="vid-frame" src="" title="Trailer"
+      allow="autoplay;encrypted-media;picture-in-picture" allowfullscreen></iframe>
+  </div>
+</div>
 
-  <script>
-    const API_BASE = "https://movie-browsing.hanig.workers.dev";
-    const IMG  = (p, size="w780")  => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
-    const BACK = (p, size="w1280") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
+<script>
+  // ─────────────────────────────────────────────────────────────────
+  // CONFIG
+  // ─────────────────────────────────────────────────────────────────
+  const API_BASE = "https://movie-browsing.hanig.workers.dev";
+  const IMG  = (p,s="w780")  => p ? `https://image.tmdb.org/t/p/${s}${p}` : "";
+  const BACK = (p,s="w1280") => p ? `https://image.tmdb.org/t/p/${s}${p}` : "";
+  const CARD_W  = 340;
+  const CARD_G  = 16;
+  const NAV_H   = 68;
+  const HOVER_DELAY = 2000;
+  const LOAD_MORE_THRESHOLD = 8; // cards from end before fetching more
 
-    const LANES = [
-      { key:"tonight",   title:"Best pick for tonight",  subtitle:"Confident, broad-appeal choices for an easy start" },
-      { key:"trending",  title:"Trending now",            subtitle:"What people are watching this week" },
-      { key:"popular",   title:"Popular now",             subtitle:"Big mainstream titles with strong visibility" },
-      { key:"reviewers", title:"Reviewers love",          subtitle:"Critically strong films with serious approval" },
-      { key:"crowd",     title:"Crowd favourites",        subtitle:"Widely watched films with strong audience pull" },
-      { key:"short",     title:"Under 100 minutes",       subtitle:"High-value films when you want something tighter" },
-      { key:"beautiful", title:"Slow and beautiful",      subtitle:"Atmospheric, emotional, and visually absorbing" },
-      { key:"thrill",    title:"High-stakes thrill",      subtitle:"Tension, pace, and urgency for a more intense night" },
-      { key:"cult",      title:"Cult favourites",         subtitle:"Older, loved, and slightly off the main path" },
-      { key:"scifi",     title:"Sci-fi worlds",           subtitle:"Speculative worlds, scale, and imagination" },
-      { key:"crime",     title:"Crime and tension",       subtitle:"Pressure, schemes, and sharp-edged stories" },
-      { key:"uplifting", title:"Warm and uplifting",      subtitle:"Lighter energy and kinder emotional tone" },
-      { key:"dark",      title:"Dark and unsettling",     subtitle:"For nights that want something heavier" },
-      { key:"family",    title:"Family animation",        subtitle:"Accessible, visually friendly choices" },
-      { key:"hidden",    title:"Hidden gems",             subtitle:"Strong films that are less overexposed" },
-    ];
+  const LANES = [
+    { key:"tonight",   label:"Best pick for tonight"  },
+    { key:"trending",  label:"Trending now"            },
+    { key:"popular",   label:"Popular now"             },
+    { key:"reviewers", label:"Reviewers love"          },
+    { key:"crowd",     label:"Crowd favourites"        },
+    { key:"short",     label:"Under 100 minutes"       },
+    { key:"beautiful", label:"Slow and beautiful"      },
+    { key:"thrill",    label:"High-stakes thrill"      },
+    { key:"cult",      label:"Cult favourites"         },
+    { key:"scifi",     label:"Sci-fi worlds"           },
+    { key:"crime",     label:"Crime and tension"       },
+    { key:"uplifting", label:"Warm and uplifting"      },
+    { key:"dark",      label:"Dark and unsettling"     },
+    { key:"family",    label:"Family animation"        },
+    { key:"hidden",    label:"Hidden gems"             },
+  ];
 
-    const LOOP_PAD          = 4;
-    const INITIAL_ROW_PAGES = 3;
-    const INITIAL_ROW_ITEMS = 50;
-    const MAX_MOVIES_PER_ROW = 120;
-    const PREVIEW_DELAY_MS  = 2000;  // hover delay before card video plays
+  // ─────────────────────────────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────────────────────────────
+  let rows        = [];   // {lane, movies[], trackEl, wrapEl, sectionEl, page, busy}
+  let focRow      = 0;
+  let focCol      = {};   // rowIndex → colIndex
+  let detailOpen  = false;
+  let movieCache  = {};
+  let heroTrailer = null;
+  let dTrailer    = null;
+  let ambUrl      = "";
+  let hoverTimer  = null;
+  let heroDebounce= null;
 
-    // ── STATE ────────────────────────────────────────────────────
-    let rows           = [];
-    let focusedRow     = 0;
-    let focusedCol     = {};
-    let focusedLoopCol = {};
-    let detailOpen     = false;
-    let ambientUrl     = "";
-    let currentHeroTrailer   = null;
-    let currentDetailTrailer = null;
-    let previewTimer   = null;
-    let previewMovieId = null;
-    const movieCache   = {};   // shared cache so hover + detail don't double-fetch
+  // ─────────────────────────────────────────────────────────────────
+  // API
+  // ─────────────────────────────────────────────────────────────────
+  async function apiFetch(path) {
+    const r = await fetch(API_BASE + path);
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
 
-    // ── DOM REFS ──────────────────────────────────────────────────
-    const rowsEl  = document.getElementById("rows");
-    const statusEl= document.getElementById("status");
-    const toastEl = document.getElementById("toast");
-    const bg      = document.getElementById("bg");
-    const bgNext  = document.getElementById("bg-next");
+  async function fetchLane(key, page=1) {
+    const d = await apiFetch(`/api/browse?intent=${key}&page=${page}`);
+    return (d.results||[]).filter(m => m && (m.backdrop_path||m.poster_path));
+  }
 
-    // ── HELPERS ───────────────────────────────────────────────────
-    function showToast(msg) {
-      toastEl.textContent = msg;
-      toastEl.classList.add("show");
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  async function fetchMovie(id) {
+    if (movieCache[id]) return movieCache[id];
+    const d = await apiFetch(`/api/movie?id=${id}`);
+    movieCache[id] = d;
+    return d;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // UTILS
+  // ─────────────────────────────────────────────────────────────────
+  function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function year(m){ return (m.release_date||"").slice(0,4)||"—"; }
+  function stars(m){ return m.vote_average ? `★ ${m.vote_average.toFixed(1)}` : "★ —"; }
+
+  function trailer(movie) {
+    const vids = movie?.videos?.results||[];
+    for (const t of ["Trailer","Teaser","Clip","Featurette"]) {
+      const v = vids.find(v=>v.site==="YouTube"&&v.type===t&&v.key);
+      if (v) return `https://www.youtube.com/embed/${v.key}?autoplay=1&mute=1&rel=0&playsinline=1`;
+    }
+    const any = vids.find(v=>v.site==="YouTube"&&v.key);
+    return any ? `https://www.youtube.com/embed/${any.key}?autoplay=1&mute=1&rel=0&playsinline=1` : null;
+  }
+
+  function castNames(movie, n=3) {
+    return (movie?.credits?.cast||[]).slice(0,n).map(a=>a.name).join(" · ");
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // AMBIENT
+  // ─────────────────────────────────────────────────────────────────
+  const bgEl   = document.getElementById("bg");
+  const bgNext = document.getElementById("bg-next");
+
+  function setAmbient(url) {
+    if (!url || url === ambUrl) return;
+    ambUrl = url;
+    bgNext.style.backgroundImage = `url("${url}")`;
+    bgNext.style.opacity = "1";
+    setTimeout(()=>{ bgEl.style.backgroundImage=`url("${url}")`; bgNext.style.opacity="0"; }, 900);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // HERO
+  // ─────────────────────────────────────────────────────────────────
+  async function setHero(movie, laneName) {
+    document.getElementById("hero-label").textContent = laneName;
+    document.getElementById("hero-title").textContent = movie.title||"";
+    document.getElementById("hero-overview").textContent = movie.overview||"";
+    document.getElementById("hero-pills").innerHTML =
+      `<span class="pill gold">${stars(movie)}</span><span class="pill">${year(movie)}</span>`;
+    document.getElementById("hero-cast").textContent = "";
+
+    const backUrl = BACK(movie.backdrop_path||movie.poster_path);
+    if (backUrl) {
+      setAmbient(backUrl);
+      document.getElementById("hero-bg").style.backgroundImage = `url("${backUrl}")`;
     }
 
-    function setAmbient(url) {
-      if (!url || url === ambientUrl) return;
-      ambientUrl = url;
-      bgNext.style.backgroundImage = `url("${url}")`;
-      bgNext.style.opacity = "1";
-      setTimeout(() => {
-        bg.style.backgroundImage = `url("${url}")`;
-        bgNext.style.opacity = "0";
-      }, 700);
-    }
+    heroTrailer = null;
+    document.getElementById("hero-trailer-btn").style.display = "none";
 
-    function safeYear(m)   { return m.release_date ? m.release_date.slice(0,4) : "—"; }
-    function voteText(m)   { return m.vote_average ? `★ ${m.vote_average.toFixed(1)}` : "★ —"; }
-    function runtimeText(r){ return r ? `${r} min` : "Runtime unknown"; }
-
-    function commitmentText(m) {
-      if (!m.runtime) return "Comfortable TV session.";
-      if (m.runtime <= 100) return "Low commitment.";
-      if (m.runtime <= 130) return "Moderate commitment.";
-      return "Longer sit-down feature.";
-    }
-
-    function makeReasonText(lane) {
-      const map = {
-        trending:"Currently active, visible, and widely discussed.",
-        popular:"Big titles with broad current appeal.",
-        reviewers:"Strong critical approval and higher quality signals.",
-        crowd:"High visibility with strong public pull.",
-        short:"Short, efficient, and still highly watchable.",
-        beautiful:"Best when you want mood, texture, and atmosphere.",
-        thrill:"Fast, tense, and built for momentum.",
-        cult:"Older favourites with enduring niche love.",
-        scifi:"Ideas, worlds, and cinematic scale.",
-        crime:"Schemes, danger, and sharp tension.",
-        uplifting:"Lighter energy and a more comforting tone.",
-        dark:"Unsettling, intense, and heavier in mood.",
-        family:"Accessible and suitable for a wider audience.",
-        hidden:"Less obvious titles with strong upside.",
-      };
-      return map[lane.key] || "A reliable, accessible pick with strong broad appeal.";
-    }
-
-    function bestForText(lane) {
-      const map = {
-        trending:"Seeing what is hot right now.",
-        popular:"A safe mainstream movie night.",
-        reviewers:"When quality matters more than hype.",
-        crowd:"Easy group-friendly browsing.",
-        short:"A weeknight or lower-energy evening.",
-        beautiful:"Watching with patience and full attention.",
-        thrill:"A more alert, edge-of-seat session.",
-        cult:"A more curious or nostalgic night.",
-        scifi:"Big ideas and immersive worlds.",
-        crime:"Sharper, tense, adult viewing.",
-        uplifting:"A softer, more comforting mood.",
-        dark:"Leaning into a heavier tone.",
-        family:"Shared viewing with lower friction.",
-        hidden:"Discovery over familiarity.",
-      };
-      return map[lane.key] || "A balanced movie night without overthinking it.";
-    }
-
-    function pickTrailer(movie) {
-      const vids = movie?.videos?.results || [];
-      for (const type of ["Trailer","Teaser","Clip","Featurette"]) {
-        const v = vids.find(v => v.site === "YouTube" && v.type === type && v.key);
-        if (v) return { url: `https://www.youtube.com/embed/${v.key}?autoplay=1&mute=1&rel=0&playsinline=1`, label: type };
+    // Fetch full details in background (cast + trailer)
+    try {
+      const full = await fetchMovie(movie.id);
+      document.getElementById("hero-cast").textContent = castNames(full);
+      const t = trailer(full);
+      if (t) {
+        heroTrailer = t;
+        document.getElementById("hero-trailer-btn").style.display = "";
       }
-      const any = vids.find(v => v.site === "YouTube" && v.key);
-      if (any) return { url: `https://www.youtube.com/embed/${any.key}?autoplay=1&mute=1&rel=0&playsinline=1`, label: any.type || "Video" };
-      return null;
-    }
+    } catch(e){}
+  }
 
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&","&amp;").replaceAll("<","&lt;")
-        .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
-    }
+  // ─────────────────────────────────────────────────────────────────
+  // BUILD CARD
+  // ─────────────────────────────────────────────────────────────────
+  function buildCard(movie, rowIdx, colIdx) {
+    const card = document.createElement("div");
+    card.className = "card";
 
-    // ── API ───────────────────────────────────────────────────────
-    async function api(path) {
-      const res = await fetch(`${API_BASE}${path}`);
-      if (!res.ok) throw new Error(`API ${res.status}`);
-      return res.json();
-    }
+    const imgSrc = IMG(movie.backdrop_path,"w780") || IMG(movie.poster_path,"w500");
 
-    async function fetchLanePage(laneKey, page=1) {
-      const data = await api(`/api/browse?intent=${encodeURIComponent(laneKey)}&page=${page}`);
-      return Array.isArray(data.results) ? data.results.filter(m => m && (m.backdrop_path||m.poster_path)) : [];
-    }
-
-    async function fetchMultiplePages(laneKey, totalPages=3) {
-      const results = await Promise.all(
-        Array.from({length:totalPages},(_,i) => fetchLanePage(laneKey, i+1))
-      );
-      return results.flat();
-    }
-
-    async function fetchMovie(id) {
-      if (movieCache[id]) return movieCache[id];
-      const data = await api(`/api/movie?id=${encodeURIComponent(id)}`);
-      movieCache[id] = data;
-      return data;
-    }
-
-    // ── LOOPING HELPERS ───────────────────────────────────────────
-    function makeLoopedMovies(movies) {
-      if (movies.length <= LOOP_PAD) return [...movies];
-      return [...movies.slice(-LOOP_PAD), ...movies, ...movies.slice(0,LOOP_PAD)];
-    }
-
-    function getRealIndex(loopIndex, realLength) {
-      return (loopIndex - LOOP_PAD + realLength) % realLength;
-    }
-
-    // ── BUILD CARD ────────────────────────────────────────────────
-    function buildCard(movie, lane, rowIndex, realIndex, loopIndex) {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.dataset.row  = rowIndex;
-      card.dataset.real = realIndex;
-      card.dataset.loop = loopIndex;
-
-      const image = movie.backdrop_path ? IMG(movie.backdrop_path,"w780") : IMG(movie.poster_path,"w500");
-
-      card.innerHTML = `
-        <div class="card-image-wrap">
-          ${image ? `<img src="${image}" alt="${escapeHtml(movie.title||"")}" loading="lazy">` : ""}
-          <div class="card-video-wrap" id="vid-${movie.id}-${loopIndex}"></div>
+    card.innerHTML = `
+      <div class="card-img-wrap">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${esc(movie.title||"")}" loading="lazy">` : ""}
+        <div class="card-video" id="cv-${rowIdx}-${colIdx}"></div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${esc(movie.title||"Untitled")}</div>
+        <div class="card-row">
+          <span class="card-year">${year(movie)}</span>
+          <span class="card-rating">${stars(movie)}</span>
         </div>
-        <div class="card-body">
-          <div class="card-title">${escapeHtml(movie.title||"Untitled")}</div>
-          <div class="card-meta">
-            <span>${safeYear(movie)}</span>
-            <span class="card-rating">${voteText(movie)}</span>
-          </div>
-          <div class="card-cast" id="cast-${movie.id}-${loopIndex}"></div>
-        </div>
-      `;
+        <div class="card-cast" id="cc-${rowIdx}-${colIdx}"></div>
+      </div>`;
 
-      // ── HOVER: cast + video preview ──
-      let hoverTimer = null;
-
-      card.addEventListener("mouseenter", () => {
-        if (!detailOpen) {
-          focusedRow = rowIndex;
-          focusedLoopCol[rowIndex] = loopIndex;
-          focusedCol[rowIndex] = realIndex;
-          applyFocus(false);
-        }
-
-        hoverTimer = setTimeout(async () => {
-          try {
-            const full = await fetchMovie(movie.id);
-
-            // Populate cast on card
-            const castEl = document.getElementById(`cast-${movie.id}-${loopIndex}`);
-            if (castEl && !castEl.textContent && full.credits?.cast?.length) {
-              castEl.textContent = full.credits.cast.slice(0,3).map(a=>a.name).join(" · ");
-            }
-
-            // Play trailer in card
-            if (!detailOpen) {
-              const trailer = pickTrailer(full);
-              const vidEl   = document.getElementById(`vid-${movie.id}-${loopIndex}`);
-              if (trailer && vidEl) {
-                vidEl.innerHTML = `<iframe src="${trailer.url}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                vidEl.classList.add("playing");
-              }
-            }
-          } catch(e) {}
-        }, PREVIEW_DELAY_MS);
-      });
-
-      card.addEventListener("mouseleave", () => {
-        clearTimeout(hoverTimer);
-        const vidEl = document.getElementById(`vid-${movie.id}-${loopIndex}`);
-        if (vidEl) { vidEl.classList.remove("playing"); vidEl.innerHTML = ""; }
-      });
-
-      card.addEventListener("click", () => {
-        focusedRow = rowIndex;
-        focusedLoopCol[rowIndex] = loopIndex;
-        focusedCol[rowIndex] = realIndex;
-        applyFocus(false);
-        openDetailFromFocus();
-      });
-
-      return card;
-    }
-
-    // ── BUILD / REBUILD ROW ───────────────────────────────────────
-    function rebuildRow(row, rowIndex) {
-      row.loopedMovies = makeLoopedMovies(row.movies);
-      row.track.innerHTML = "";
-      row.loopedMovies.forEach((movie, loopIndex) => {
-        const realIndex = getRealIndex(loopIndex, row.movies.length);
-        row.track.appendChild(buildCard(movie, row.lane, rowIndex, realIndex, loopIndex));
-      });
-    }
-
-    function buildRow(lane, movies, rowIndex) {
-      const section = document.createElement("section");
-      section.className = "row";
-
-      section.innerHTML = `
-        <div class="row-header">
-          <div class="row-title">${escapeHtml(lane.title)}</div>
-          <div class="row-line"></div>
-        </div>
-        <div class="row-track-outer">
-          <div class="row-wrap">
-            <div class="row-track"></div>
-          </div>
-        </div>
-      `;
-
-      rowsEl.appendChild(section);
-
-      const row = {
-        lane,
-        movies: [...movies],
-        loopedMovies: [],
-        section,
-        wrap:  section.querySelector(".row-wrap"),
-        track: section.querySelector(".row-track"),
-        page:  INITIAL_ROW_PAGES,
-        loadingMore: false,
-      };
-
-      rebuildRow(row, rowIndex);
-      return row;
-    }
-
-    // ── FOCUS + TRACK SCROLL ─────────────────────────────────────
-    function currentMovie() {
-      const row = rows[focusedRow];
-      if (!row) return null;
-      return row.movies[focusedCol[focusedRow] ?? 0] || null;
-    }
-
-    function getCurrentTranslateX(el) {
-      const m = getComputedStyle(el).transform;
-      if (!m || m === "none") return 0;
-      const parts = m.match(/matrix.*\((.+)\)/)?.[1]?.split(", ");
-      return parts ? parseFloat(parts[4]) || 0 : 0;
-    }
-
-    function moveTrackToLoopIndex(row, loopIndex, animated=true) {
-      const card = row.track.children[loopIndex];
-      if (!card) return;
-      const cardLeft  = card.offsetLeft;
-      const cardRight = cardLeft + card.offsetWidth;
-      const curShift  = getCurrentTranslateX(row.track);
-      const visLeft   = -curShift;
-      const visRight  = visLeft + row.wrap.clientWidth;
-      let newShift    = curShift;
-
-      if (cardLeft  < visLeft  + 140) newShift = -(cardLeft  - 140);
-      if (cardRight > visRight - 220) newShift = -(cardRight - row.wrap.clientWidth + 220);
-
-      const maxShift = -(row.track.scrollWidth - row.wrap.clientWidth);
-      newShift = row.track.scrollWidth <= row.wrap.clientWidth
-        ? 0 : Math.max(maxShift, Math.min(0, newShift));
-
-      row.track.style.transition = animated ? "transform .55s cubic-bezier(.2,.7,.2,1)" : "none";
-      row.track.style.transform  = `translateX(${newShift}px)`;
-      if (!animated) requestAnimationFrame(() => {
-        row.track.style.transition = "transform .55s cubic-bezier(.2,.7,.2,1)";
-      });
-    }
-
-    function jumpTrackToLoopIndex(row, li) { moveTrackToLoopIndex(row, li, false); }
-
-    function normalizeLoopPosition(rowIndex) {
-      const row = rows[rowIndex];
-      const len = row.movies.length;
-      let li = focusedLoopCol[rowIndex];
-      if (li < LOOP_PAD) {
-        li += len; focusedLoopCol[rowIndex] = li; jumpTrackToLoopIndex(row, li);
-      } else if (li >= LOOP_PAD + len) {
-        li -= len; focusedLoopCol[rowIndex] = li; jumpTrackToLoopIndex(row, li);
-      }
-      focusedCol[rowIndex] = getRealIndex(focusedLoopCol[rowIndex], len);
-    }
-
-    function applyFocus(scrollIntoView=true) {
-      document.querySelectorAll(".card.focused").forEach(el => el.classList.remove("focused"));
-      document.querySelectorAll(".row.active").forEach(el => el.classList.remove("active"));
-
-      const row = rows[focusedRow];
-      if (!row?.loopedMovies?.length) return;
-      if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
-
-      const li   = focusedLoopCol[focusedRow];
-      const card = row.track.children[li];
-      if (!card) return;
-
-      row.section.classList.add("active");
-      card.classList.add("focused");
-      moveTrackToLoopIndex(row, li, true);
-      normalizeLoopPosition(focusedRow);
-
-      const movie = row.movies[focusedCol[focusedRow]];
-      if (movie) updateHero(movie, row.lane);
-
-      if (scrollIntoView) row.section.scrollIntoView({ behavior:"smooth", block:"nearest" });
-      maybeLoadMore(focusedRow);
-    }
-
-    // ── HERO UPDATE ───────────────────────────────────────────────
-    async function updateHero(movie, lane) {
-      document.getElementById("hero-eyebrow").textContent = lane.title;
-      document.getElementById("hero-title").textContent   = movie.title || "Untitled";
-      document.getElementById("hero-sub").textContent     = movie.overview || lane.subtitle;
-
-      document.getElementById("hero-meta").innerHTML = `
-        <span class="pill gold">${voteText(movie)}</span>
-        <span class="pill">${safeYear(movie)}</span>
-        <span class="pill">${lane.subtitle}</span>
-      `;
-      document.getElementById("hero-tags").innerHTML = `
-        <span class="pill">${makeReasonText(lane)}</span>
-        <span class="pill">${bestForText(lane)}</span>
-      `;
-
-      const backPath = movie.backdrop_path || movie.poster_path;
-      if (backPath) {
-        const url = BACK(backPath,"w1280");
-        setAmbient(url);
-        document.getElementById("hero-image").style.backgroundImage = `url("${url}")`;
-      }
-
-      currentHeroTrailer = null;
-      const heroTrailerBtn = document.getElementById("hero-trailer");
-      heroTrailerBtn.style.display = "none";
-
-      try {
-        const full = await fetchMovie(movie.id);
-        const trailer = pickTrailer(full);
-        if (trailer) {
-          currentHeroTrailer = trailer;
-          heroTrailerBtn.style.display = "inline-flex";
-          heroTrailerBtn.textContent = `Watch ${trailer.label.toLowerCase()}`;
-        }
-      } catch(e) {}
-    }
-
-    // ── LOAD MORE ─────────────────────────────────────────────────
-    async function maybeLoadMore(rowIndex) {
-      const row = rows[rowIndex];
-      if (!row || row.loadingMore || row.movies.length >= MAX_MOVIES_PER_ROW) return;
-      if ((focusedCol[rowIndex]||0) < row.movies.length - 12) return;
-
-      row.loadingMore = true;
-      try {
-        const next  = row.page + 1;
-        const pages = await Promise.all([fetchLanePage(row.lane.key,next), fetchLanePage(row.lane.key,next+1)]);
-        const fresh = pages.flat().filter(m => !new Set(row.movies.map(x=>x.id)).has(m.id));
-        if (fresh.length) {
-          row.movies.push(...fresh);
-          row.page = next + 1;
-          rebuildRow(row, rowIndex);
-          const currentReal = focusedCol[rowIndex] || 0;
-          focusedLoopCol[rowIndex] = currentReal + LOOP_PAD;
-          jumpTrackToLoopIndex(row, focusedLoopCol[rowIndex]);
-          applyFocus(false);
-        }
-      } catch(e) { console.error(e); }
-      finally { row.loadingMore = false; }
-    }
-
-    // ── DETAIL PANEL ──────────────────────────────────────────────
-    async function openDetailFromFocus() {
-      const movie = currentMovie();
-      const row   = rows[focusedRow];
-      if (!movie || !row) return;
-
-      detailOpen = true;
-      document.getElementById("detail").classList.add("open");
-      document.getElementById("detail-title").textContent = "Loading…";
-      ["detail-tagline","detail-overview"].forEach(id => document.getElementById(id).textContent="");
-      ["detail-pills","detail-cast"].forEach(id => document.getElementById(id).innerHTML="");
-      document.getElementById("detail-backdrop").src = "";
-      document.getElementById("detail-trailer").style.display = "none";
-      currentDetailTrailer = null;
-
-      try {
-        const full = await fetchMovie(movie.id);
-        document.getElementById("detail-title").textContent   = full.title || movie.title || "Untitled";
-        document.getElementById("detail-tagline").textContent = full.tagline || row.lane.subtitle || "";
-        document.getElementById("detail-pills").innerHTML = `
-          <span class="pill gold">${voteText(full)}</span>
-          <span class="pill">${safeYear(full)}</span>
-          <span class="pill">${runtimeText(full.runtime)}</span>
-          <span class="pill">${full.vote_count ? full.vote_count.toLocaleString()+" votes" : "Votes unavailable"}</span>
-        `;
-        document.getElementById("reason-fit").textContent    = makeReasonText(row.lane);
-        document.getElementById("reason-bestfor").textContent = bestForText(row.lane);
-        document.getElementById("reason-commit").textContent  = commitmentText(full);
-        document.getElementById("detail-overview").textContent = full.overview || "No synopsis available.";
-
-        const cast = full.credits?.cast?.slice(0,8) || [];
-        document.getElementById("detail-cast").innerHTML = cast.length
-          ? cast.map(p => `<div class="cast-chip">${escapeHtml(p.name)}${p.character ? ` · ${escapeHtml(p.character)}` : ""}</div>`).join("")
-          : `<div class="cast-chip">Cast unavailable</div>`;
-
-        const backdropPath = full.backdrop_path || full.poster_path;
-        if (backdropPath) document.getElementById("detail-backdrop").src = BACK(backdropPath,"w1280");
-
-        const trailer = pickTrailer(full);
-        if (trailer) {
-          currentDetailTrailer = trailer;
-          const btn = document.getElementById("detail-trailer");
-          btn.style.display = "inline-flex";
-          btn.textContent   = `Watch ${trailer.label.toLowerCase()}`;
-        }
-      } catch(e) {
-        console.error(e);
-        showToast("Could not load movie details");
-      }
-    }
-
-    function closeDetail() {
-      detailOpen = false;
-      document.getElementById("detail").classList.remove("open");
-    }
-
-    // ── VIDEO OVERLAY ─────────────────────────────────────────────
-    function openVideoOverlay(url) {
-      if (!url) return;
-      document.getElementById("video-frame").src = url;
-      document.getElementById("video-overlay").classList.add("open");
-    }
-
-    function closeVideoOverlay() {
-      document.getElementById("video-frame").src = "";
-      document.getElementById("video-overlay").classList.remove("open");
-    }
-
-    // ── KEYBOARD ──────────────────────────────────────────────────
-    document.addEventListener("keydown", e => {
-      if (document.getElementById("video-overlay").classList.contains("open")) {
-        if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); closeVideoOverlay(); }
-        return;
-      }
-      if (detailOpen) {
-        if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); closeDetail(); }
-        return;
-      }
-      if (!rows.length) return;
-
-      switch(e.key) {
-        case "ArrowRight":
-          e.preventDefault();
-          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow]||LOOP_PAD) + 1;
-          applyFocus(false); break;
-        case "ArrowLeft":
-          e.preventDefault();
-          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow]||LOOP_PAD) - 1;
-          applyFocus(false); break;
-        case "ArrowDown":
-          e.preventDefault();
-          focusedRow = (focusedRow + 1) % rows.length;
-          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
-          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
-          applyFocus(true); break;
-        case "ArrowUp":
-          e.preventDefault();
-          focusedRow = (focusedRow - 1 + rows.length) % rows.length;
-          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
-          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
-          applyFocus(true); break;
-        case "Enter":
-          e.preventDefault();
-          openDetailFromFocus(); break;
-      }
+    // Mouse hover — 2 s delay then play
+    card.addEventListener("mouseenter", () => {
+      stopHover();
+      if (detailOpen) return;
+      hoverTimer = setTimeout(async () => {
+        try {
+          const full = await fetchMovie(movie.id);
+          // cast
+          const cc = document.getElementById(`cc-${rowIdx}-${colIdx}`);
+          if (cc && !cc.textContent) cc.textContent = castNames(full);
+          // video
+          const cv = document.getElementById(`cv-${rowIdx}-${colIdx}`);
+          const t  = trailer(full);
+          if (cv && t && !detailOpen) {
+            cv.innerHTML = `<iframe src="${t}" allow="autoplay;encrypted-media" allowfullscreen></iframe>`;
+            cv.classList.add("on");
+          }
+        } catch(e){}
+      }, HOVER_DELAY);
     });
 
-    // ── BUTTON WIRING ─────────────────────────────────────────────
-    document.getElementById("detail-close").addEventListener("click", closeDetail);
-    document.getElementById("detail").addEventListener("click", e => { if (e.target.id==="detail") closeDetail(); });
-    document.getElementById("hero-open").addEventListener("click", openDetailFromFocus);
-    document.getElementById("hero-next").addEventListener("click", () => {
-      focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow]||LOOP_PAD) + 1;
+    card.addEventListener("mouseleave", stopHover);
+    card.addEventListener("click", () => {
+      focRow = rowIdx;
+      focCol[rowIdx] = colIdx;
       applyFocus(false);
-    });
-    document.getElementById("hero-trailer").addEventListener("click", () => {
-      if (currentHeroTrailer?.url) openVideoOverlay(currentHeroTrailer.url);
-    });
-    document.getElementById("detail-trailer").addEventListener("click", () => {
-      if (currentDetailTrailer?.url) openVideoOverlay(currentDetailTrailer.url);
-    });
-    document.getElementById("video-close").addEventListener("click", closeVideoOverlay);
-    document.getElementById("video-overlay").addEventListener("click", e => {
-      if (e.target.id==="video-overlay") closeVideoOverlay();
+      openDetail();
     });
 
-    // ── INIT ──────────────────────────────────────────────────────
-    async function init() {
-      try {
-        statusEl.textContent = "Loading curated lanes…";
-        rowsEl.innerHTML = "";
+    return card;
+  }
 
-        const laneResults = await Promise.all(
-          LANES.map(async lane => ({
-            lane,
-            movies: (await fetchMultiplePages(lane.key, INITIAL_ROW_PAGES)).slice(0, INITIAL_ROW_ITEMS)
-          }))
-        );
+  function stopHover() {
+    clearTimeout(hoverTimer);
+    // Stop all card videos
+    document.querySelectorAll(".card-video.on").forEach(el => {
+      el.classList.remove("on"); el.innerHTML = "";
+    });
+  }
 
-        rows = laneResults
-          .filter(x => x.movies?.length)
-          .map((x,i) => buildRow(x.lane, x.movies, i));
+  // ─────────────────────────────────────────────────────────────────
+  // BUILD ROW
+  // ─────────────────────────────────────────────────────────────────
+  function buildRow(lane, movies, rowIdx) {
+    const section = document.createElement("section");
+    section.className = "row";
+    section.innerHTML = `
+      <div class="row-head">
+        <div class="row-name">${esc(lane.label)}</div>
+        <div class="row-loading-dot"></div>
+        <div class="row-line"></div>
+      </div>
+      <div class="row-outer">
+        <div class="row-wrap"><div class="row-track"></div></div>
+      </div>`;
 
-        if (!rows.length) { statusEl.textContent = "No movies could be loaded."; return; }
+    document.getElementById("rows").appendChild(section);
 
-        focusedRow     = 0;
-        focusedCol     = { 0:0 };
-        focusedLoopCol = { 0:LOOP_PAD };
-        applyFocus(false);
-        statusEl.textContent = "";
-      } catch(err) {
-        console.error(err);
-        statusEl.textContent = "Could not load data. Check the worker URL and CORS settings.";
-      }
+    const trackEl = section.querySelector(".row-track");
+    const wrapEl  = section.querySelector(".row-wrap");
+
+    movies.forEach((m,i) => trackEl.appendChild(buildCard(m, rowIdx, i)));
+
+    return { lane, movies:[...movies], trackEl, wrapEl, sectionEl:section, page:2, busy:false };
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // FOCUS
+  // ─────────────────────────────────────────────────────────────────
+  function applyFocus(scrollPage=true) {
+    // Clear
+    document.querySelectorAll(".card.focused").forEach(el=>el.classList.remove("focused"));
+    document.querySelectorAll(".row.active").forEach(el=>el.classList.remove("active"));
+
+    if (!rows.length) return;
+    const ri  = Math.max(0, Math.min(focRow, rows.length-1));
+    const row = rows[ri];
+    if (!row) return;
+
+    const ci  = Math.max(0, Math.min(focCol[ri]||0, row.movies.length-1));
+    focCol[ri] = ci;
+
+    const card = row.trackEl.children[ci];
+    if (card) {
+      card.classList.add("focused");
+
+      // Scroll track so focused card is well within view
+      const stride  = CARD_W + CARD_G;
+      const wrapW   = row.wrapEl.clientWidth;
+      const maxOff  = Math.max(0, row.movies.length * stride - wrapW);
+      let   shift   = ci * stride - wrapW/2 + CARD_W/2;
+      shift = Math.max(0, Math.min(shift, maxOff));
+      row.trackEl.style.transform = `translateX(-${shift}px)`;
     }
 
-    init();
-  </script>
+    row.sectionEl.classList.add("active");
+
+    // Scroll page to keep active row in comfortable view
+    if (scrollPage) {
+      const top = row.sectionEl.getBoundingClientRect().top + window.scrollY - NAV_H - 20;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+
+    // Update hero (debounced so rapid arrow-key navigation doesn't spam fetch)
+    clearTimeout(heroDebounce);
+    heroDebounce = setTimeout(() => {
+      setHero(row.movies[ci], row.lane.label);
+    }, 120);
+
+    // Load more if near end
+    maybeLoadMore(ri);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // LOAD MORE (infinite)
+  // ─────────────────────────────────────────────────────────────────
+  async function maybeLoadMore(ri) {
+    const row = rows[ri];
+    if (!row || row.busy) return;
+    if ((focCol[ri]||0) < row.movies.length - LOAD_MORE_THRESHOLD) return;
+
+    row.busy = true;
+    row.sectionEl.classList.add("loading-more");
+
+    try {
+      const newMovies = await fetchLane(row.lane.key, row.page);
+      const existing  = new Set(row.movies.map(m=>m.id));
+      const fresh     = newMovies.filter(m=>!existing.has(m.id));
+      if (fresh.length) {
+        fresh.forEach((m,i) => {
+          const colIdx = row.movies.length;
+          row.movies.push(m);
+          row.trackEl.appendChild(buildCard(m, ri, colIdx));
+        });
+        row.page++;
+      }
+    } catch(e){ console.warn("load more:", e); }
+    finally {
+      row.busy = false;
+      row.sectionEl.classList.remove("loading-more");
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // DETAIL
+  // ─────────────────────────────────────────────────────────────────
+  async function openDetail() {
+    const row   = rows[focRow];
+    const movie = row?.movies[focCol[focRow]||0];
+    if (!movie) return;
+
+    stopHover();
+    detailOpen = true;
+    document.getElementById("detail").classList.add("open");
+
+    document.getElementById("d-title").textContent    = "Loading…";
+    document.getElementById("d-tagline").textContent  = "";
+    document.getElementById("d-overview").textContent = "";
+    document.getElementById("d-cast").innerHTML       = "";
+    document.getElementById("d-backdrop").src         = "";
+    document.getElementById("d-trailer-btn").style.display = "none";
+    dTrailer = null;
+
+    try {
+      const full = await fetchMovie(movie.id);
+      document.getElementById("d-title").textContent    = full.title||movie.title||"";
+      document.getElementById("d-tagline").textContent  = full.tagline||"";
+      document.getElementById("d-overview").textContent = full.overview||"";
+      document.getElementById("d-pills").innerHTML = `
+        <span class="pill gold">${stars(full)}</span>
+        <span class="pill">${year(full)}</span>
+        <span class="pill">${full.runtime ? full.runtime+"m" : "—"}</span>
+        <span class="pill">${full.vote_count ? full.vote_count.toLocaleString()+" votes" : ""}</span>`;
+      document.getElementById("d-cast").innerHTML =
+        (full.credits?.cast||[]).slice(0,8)
+          .map(p=>`<div class="cast-chip">${esc(p.name)}${p.character?` · ${esc(p.character)}`:""}</div>`)
+          .join("") || "<div class='cast-chip'>Cast unavailable</div>";
+      const backPath = full.backdrop_path||full.poster_path;
+      if (backPath) document.getElementById("d-backdrop").src = BACK(backPath,"w1280");
+      const t = trailer(full);
+      if (t) {
+        dTrailer = t;
+        document.getElementById("d-trailer-btn").style.display = "";
+      }
+    } catch(e){ document.getElementById("d-title").textContent = "Could not load details."; }
+  }
+
+  function closeDetail() {
+    detailOpen = false;
+    document.getElementById("detail").classList.remove("open");
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // VIDEO OVERLAY
+  // ─────────────────────────────────────────────────────────────────
+  function openVideo(url) {
+    if (!url) return;
+    document.getElementById("vid-frame").src = url;
+    document.getElementById("vid-overlay").classList.add("open");
+  }
+
+  function closeVideo() {
+    document.getElementById("vid-frame").src = "";
+    document.getElementById("vid-overlay").classList.remove("open");
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // KEYBOARD + TV REMOTE
+  // All common TV remote D-pad keycodes covered.
+  // ─────────────────────────────────────────────────────────────────
+  const KEY = {
+    UP:    [38, 19],
+    DOWN:  [40, 20],
+    LEFT:  [37, 21],
+    RIGHT: [39, 22],
+    OK:    [13, 32, 179],   // Enter, Space, MediaPlay
+    BACK:  [8, 27, 461],    // Backspace, Escape, webOS back
+  };
+
+  function matchKey(code, group) { return KEY[group].includes(code); }
+
+  document.addEventListener("keydown", e => {
+    const c = e.keyCode || e.which;
+
+    // Video overlay open
+    if (document.getElementById("vid-overlay").classList.contains("open")) {
+      if (matchKey(c,"BACK")) { e.preventDefault(); closeVideo(); }
+      return;
+    }
+
+    // Detail open
+    if (detailOpen) {
+      if (matchKey(c,"BACK")) { e.preventDefault(); closeDetail(); }
+      return;
+    }
+
+    if (!rows.length) return;
+    const ri = focRow;
+    const ci = focCol[ri]||0;
+
+    if (matchKey(c,"RIGHT")) {
+      e.preventDefault();
+      focCol[ri] = ci + 1;
+      applyFocus(false);
+    } else if (matchKey(c,"LEFT")) {
+      e.preventDefault();
+      focCol[ri] = Math.max(0, ci - 1);
+      applyFocus(false);
+    } else if (matchKey(c,"DOWN")) {
+      e.preventDefault();
+      if (focRow < rows.length - 1) {
+        focRow++;
+        if (focCol[focRow] == null) focCol[focRow] = 0;
+        applyFocus(true);
+      }
+    } else if (matchKey(c,"UP")) {
+      e.preventDefault();
+      if (focRow > 0) {
+        focRow--;
+        if (focCol[focRow] == null) focCol[focRow] = 0;
+        applyFocus(true);
+      }
+    } else if (matchKey(c,"OK")) {
+      e.preventDefault();
+      openDetail();
+    } else if (matchKey(c,"BACK")) {
+      e.preventDefault();
+      // no-op at top level
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // BUTTON WIRING
+  // ─────────────────────────────────────────────────────────────────
+  document.getElementById("hero-open-btn").onclick    = openDetail;
+  document.getElementById("hero-next-btn").onclick    = () => { focCol[focRow]=(focCol[focRow]||0)+1; applyFocus(false); };
+  document.getElementById("hero-trailer-btn").onclick = () => openVideo(heroTrailer);
+  document.getElementById("d-trailer-btn").onclick    = () => openVideo(dTrailer);
+  document.getElementById("d-close").onclick          = closeDetail;
+  document.getElementById("detail").onclick           = e => { if (e.target.id==="detail") closeDetail(); };
+  document.getElementById("vid-close").onclick        = closeVideo;
+  document.getElementById("vid-overlay").onclick      = e => { if (e.target.id==="vid-overlay") closeVideo(); };
+
+  // ─────────────────────────────────────────────────────────────────
+  // INIT — fast: first 2 lanes immediately, rest staggered
+  // ─────────────────────────────────────────────────────────────────
+  async function init() {
+    // Ensure body has focus for remote control
+    document.body.focus();
+
+    try {
+      // Load first 2 lanes in parallel — show UI fast
+      const [m0, m1] = await Promise.all([
+        fetchLane(LANES[0].key, 1),
+        fetchLane(LANES[1].key, 1),
+      ]);
+
+      const firstBatch = [
+        { lane:LANES[0], movies:m0 },
+        { lane:LANES[1], movies:m1 },
+      ].filter(x=>x.movies.length);
+
+      firstBatch.forEach((x,i) => rows.push(buildRow(x.lane, x.movies, rows.length)));
+
+      // Hide loading screen, show UI
+      document.getElementById("loading-screen").classList.add("hidden");
+      focRow = 0; focCol = { 0:0 };
+      applyFocus(false);
+
+      // Load remaining lanes one-by-one so we don't hammer the API
+      for (let i = 2; i < LANES.length; i++) {
+        try {
+          const movies = await fetchLane(LANES[i].key, 1);
+          if (movies.length) rows.push(buildRow(LANES[i], movies, rows.length));
+        } catch(e){ console.warn(LANES[i].key, e); }
+        // Small gap so the browser stays responsive
+        await new Promise(r => setTimeout(r, 80));
+      }
+
+    } catch(e) {
+      console.error(e);
+      document.querySelector(".loading-text").textContent = "Failed to load. Check worker URL.";
+    }
+  }
+
+  init();
+</script>
 </body>
 </html>
