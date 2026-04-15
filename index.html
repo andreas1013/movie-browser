@@ -153,6 +153,34 @@
         linear-gradient(to top, rgba(6,7,11,1) 0%, rgba(6,7,11,.45) 45%, rgba(6,7,11,.2) 100%);
     }
 
+    #hero-video{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transition:opacity .45s ease;
+      pointer-events:none;
+    }
+
+    #hero-video.playing{
+      opacity:1;
+    }
+
+    #hero-video iframe{
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    #hero-video::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(to right, rgba(6,7,11,.88) 0%, rgba(6,7,11,.55) 38%, rgba(6,7,11,.20) 68%, rgba(6,7,11,.65) 100%),
+        linear-gradient(to top, rgba(6,7,11,1) 0%, rgba(6,7,11,.45) 45%, rgba(6,7,11,.2) 100%);
+    }
+
     #hero-content{
       position:relative;
       z-index:2;
@@ -299,7 +327,7 @@
       display:flex;
       gap:var(--card-gap);
       will-change:transform;
-      transition:transform .5s cubic-bezier(.2,.7,.2,1);
+      transition:transform .55s cubic-bezier(.2,.7,.2,1);
     }
 
     .card{
@@ -553,6 +581,58 @@
       font-size:14px;
     }
 
+    #video-overlay{
+      position:fixed;
+      inset:0;
+      z-index:140;
+      background:rgba(0,0,0,.88);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+    }
+
+    #video-overlay.open{
+      display:flex;
+    }
+
+    #video-panel{
+      width:min(92vw,1400px);
+      aspect-ratio:16/9;
+      position:relative;
+      background:#000;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 40px 100px rgba(0,0,0,.65);
+    }
+
+    #video-close{
+      position:absolute;
+      top:14px;
+      right:14px;
+      z-index:2;
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.45);
+      color:#fff;
+      font-size:22px;
+      cursor:pointer;
+    }
+
+    #video-frame-wrap{
+      width:100%;
+      height:100%;
+    }
+
+    #video-frame{
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
     #toast{
       position:fixed;
       left:50%;
@@ -604,6 +684,7 @@
 
     <section id="hero">
       <div id="hero-image"></div>
+      <div id="hero-video"></div>
       <div id="hero-content">
         <div class="eyebrow" id="hero-eyebrow">Best pick for tonight</div>
         <h1 id="hero-title">Loading movies...</h1>
@@ -659,6 +740,21 @@
     </div>
   </div>
 
+  <div id="video-overlay">
+    <div id="video-panel">
+      <button id="video-close" aria-label="Close trailer">×</button>
+      <div id="video-frame-wrap">
+        <iframe
+          id="video-frame"
+          src=""
+          title="Trailer"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script>
@@ -667,19 +763,39 @@
     const BACK = (p, size = "w1280") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
 
     const LANES = [
-      { key: "tonight", title: "Best pick for tonight", subtitle: "Confident, broad-appeal choices for an easy start" },
-      { key: "short", title: "Under 100 minutes", subtitle: "High-value films when you want something tighter" },
+      { key: "tonight",   title: "Best pick for tonight", subtitle: "Confident, broad-appeal choices for an easy start" },
+      { key: "trending",  title: "Trending now", subtitle: "What people are watching this week" },
+      { key: "popular",   title: "Popular now", subtitle: "Big mainstream titles with strong visibility" },
+      { key: "reviewers", title: "Reviewers love", subtitle: "Critically strong films with serious approval" },
+      { key: "crowd",     title: "Crowd favourites", subtitle: "Widely watched films with strong audience pull" },
+      { key: "short",     title: "Under 100 minutes", subtitle: "High-value films when you want something tighter" },
       { key: "beautiful", title: "Slow and beautiful", subtitle: "Atmospheric, emotional, and visually absorbing picks" },
-      { key: "thrill", title: "High-stakes thrill", subtitle: "Tension, pace, and urgency for a more intense night" }
+      { key: "thrill",    title: "High-stakes thrill", subtitle: "Tension, pace, and urgency for a more intense night" },
+      { key: "cult",      title: "Cult favourites", subtitle: "Older, loved, and slightly off the main path" },
+      { key: "scifi",     title: "Sci-fi worlds", subtitle: "Speculative worlds, scale, and imagination" },
+      { key: "crime",     title: "Crime and tension", subtitle: "Pressure, schemes, and sharp-edged stories" },
+      { key: "uplifting", title: "Warm and uplifting", subtitle: "Lighter energy and kinder emotional tone" },
+      { key: "dark",      title: "Dark and unsettling", subtitle: "For nights that want something heavier" },
+      { key: "family",    title: "Family animation", subtitle: "Accessible, visually friendly choices" },
+      { key: "hidden",    title: "Hidden gems", subtitle: "Strong films that are less overexposed" }
     ];
+
+    const LOOP_PAD = 4;
+    const INITIAL_ROW_PAGES = 3;
+    const INITIAL_ROW_ITEMS = 50;
+    const MAX_MOVIES_PER_ROW = 120;
+    const PREVIEW_DELAY_MS = 2200;
 
     let rows = [];
     let focusedRow = 0;
     let focusedCol = {};
+    let focusedLoopCol = {};
     let detailOpen = false;
     let ambientUrl = "";
     let currentHeroTrailer = null;
     let currentDetailTrailer = null;
+    let previewTimer = null;
+    let previewMovieId = null;
 
     const rowsEl = document.getElementById("rows");
     const statusEl = document.getElementById("status");
@@ -724,17 +840,45 @@
     }
 
     function makeReasonText(lane) {
-      if (lane.key === "short") return "Short, efficient, and still highly watchable.";
-      if (lane.key === "beautiful") return "Best when you want mood, texture, and atmosphere.";
-      if (lane.key === "thrill") return "Fast, tense, and built for momentum.";
-      return "A reliable, accessible pick with strong broad appeal.";
+      switch (lane.key) {
+        case "trending": return "Currently active, visible, and widely discussed.";
+        case "popular": return "Big titles with broad current appeal.";
+        case "reviewers": return "Strong critical approval and higher quality signals.";
+        case "crowd": return "High visibility with strong public pull.";
+        case "short": return "Short, efficient, and still highly watchable.";
+        case "beautiful": return "Best when you want mood, texture, and atmosphere.";
+        case "thrill": return "Fast, tense, and built for momentum.";
+        case "cult": return "Older favourites with enduring niche love.";
+        case "scifi": return "Ideas, worlds, and cinematic scale.";
+        case "crime": return "Schemes, danger, and sharp tension.";
+        case "uplifting": return "Lighter energy and a more comforting tone.";
+        case "dark": return "Unsettling, intense, and heavier in mood.";
+        case "family": return "Accessible and suitable for a wider audience.";
+        case "hidden": return "Less obvious titles with strong upside.";
+        case "tonight":
+        default: return "A reliable, accessible pick with strong broad appeal.";
+      }
     }
 
     function bestForText(lane) {
-      if (lane.key === "short") return "A weeknight or lower-energy evening.";
-      if (lane.key === "beautiful") return "Watching with patience and full attention.";
-      if (lane.key === "thrill") return "A more alert, edge-of-seat session.";
-      return "A balanced movie night without overthinking it.";
+      switch (lane.key) {
+        case "trending": return "Seeing what is hot right now.";
+        case "popular": return "A safe mainstream movie night.";
+        case "reviewers": return "When quality matters more than hype.";
+        case "crowd": return "Easy group-friendly browsing.";
+        case "short": return "A weeknight or lower-energy evening.";
+        case "beautiful": return "Watching with patience and full attention.";
+        case "thrill": return "A more alert, edge-of-seat session.";
+        case "cult": return "A more curious or nostalgic night.";
+        case "scifi": return "Big ideas and immersive worlds.";
+        case "crime": return "Sharper, tense, adult viewing.";
+        case "uplifting": return "A softer, more comforting mood.";
+        case "dark": return "Leaning into a heavier tone.";
+        case "family": return "Shared viewing with lower friction.";
+        case "hidden": return "Discovery over familiarity.";
+        case "tonight":
+        default: return "A balanced movie night without overthinking it.";
+      }
     }
 
     function commitmentText(movie) {
@@ -745,11 +889,30 @@
     }
 
     function pickTrailer(movie) {
-      const vids = movie && movie.videos && Array.isArray(movie.videos.results) ? movie.videos.results : [];
-      const best = vids.find(v => v.site === "YouTube" && v.type === "Trailer") ||
-                   vids.find(v => v.site === "YouTube" && v.type === "Teaser") ||
-                   vids.find(v => v.site === "YouTube");
-      return best ? `https://www.youtube.com/watch?v=${best.key}` : null;
+      const vids = movie && movie.videos && Array.isArray(movie.videos.results)
+        ? movie.videos.results
+        : [];
+
+      const priority = ["Trailer", "Teaser", "Clip", "Featurette"];
+      for (const type of priority) {
+        const found = vids.find(v => v.site === "YouTube" && v.type === type && v.key);
+        if (found) {
+          return {
+            url: `https://www.youtube.com/embed/${found.key}?autoplay=1&mute=1&rel=0&playsinline=1`,
+            label: type
+          };
+        }
+      }
+
+      const anyYoutube = vids.find(v => v.site === "YouTube" && v.key);
+      if (anyYoutube) {
+        return {
+          url: `https://www.youtube.com/embed/${anyYoutube.key}?autoplay=1&mute=1&rel=0&playsinline=1`,
+          label: anyYoutube.type || "Video"
+        };
+      }
+
+      return null;
     }
 
     async function api(path) {
@@ -761,6 +924,15 @@
     async function fetchLanePage(laneKey, page = 1) {
       const data = await api(`/api/browse?intent=${encodeURIComponent(laneKey)}&page=${page}`);
       return Array.isArray(data.results) ? data.results.filter(m => m && (m.backdrop_path || m.poster_path)) : [];
+    }
+
+    async function fetchMultiplePages(laneKey, totalPages = 3) {
+      const promises = [];
+      for (let page = 1; page <= totalPages; page++) {
+        promises.push(fetchLanePage(laneKey, page));
+      }
+      const results = await Promise.all(promises);
+      return results.flat();
     }
 
     async function fetchMovie(id) {
@@ -776,11 +948,23 @@
         .replaceAll("'", "&#39;");
     }
 
-    function buildCard(movie, lane, rowIndex, colIndex) {
+    function makeLoopedMovies(movies) {
+      if (movies.length <= LOOP_PAD) return [...movies];
+      const head = movies.slice(0, LOOP_PAD);
+      const tail = movies.slice(-LOOP_PAD);
+      return [...tail, ...movies, ...head];
+    }
+
+    function getRealIndex(loopIndex, realLength) {
+      return (loopIndex - LOOP_PAD + realLength) % realLength;
+    }
+
+    function buildCard(movie, lane, rowIndex, realIndex, loopIndex) {
       const card = document.createElement("div");
       card.className = "card";
       card.dataset.row = rowIndex;
-      card.dataset.col = colIndex;
+      card.dataset.real = realIndex;
+      card.dataset.loop = loopIndex;
 
       const image = movie.backdrop_path ? IMG(movie.backdrop_path, "w780") : IMG(movie.poster_path, "w500");
 
@@ -801,18 +985,30 @@
       card.addEventListener("mouseenter", () => {
         if (detailOpen) return;
         focusedRow = rowIndex;
-        focusedCol[rowIndex] = colIndex;
+        focusedLoopCol[rowIndex] = loopIndex;
+        focusedCol[rowIndex] = realIndex;
         applyFocus(false);
       });
 
       card.addEventListener("click", () => {
         focusedRow = rowIndex;
-        focusedCol[rowIndex] = colIndex;
+        focusedLoopCol[rowIndex] = loopIndex;
+        focusedCol[rowIndex] = realIndex;
         applyFocus(false);
         openDetailFromFocus();
       });
 
       return card;
+    }
+
+    function rebuildRow(row, rowIndex) {
+      row.loopedMovies = makeLoopedMovies(row.movies);
+      row.track.innerHTML = "";
+
+      row.loopedMovies.forEach((movie, loopIndex) => {
+        const realIndex = getRealIndex(loopIndex, row.movies.length);
+        row.track.appendChild(buildCard(movie, row.lane, rowIndex, realIndex, loopIndex));
+      });
     }
 
     function buildRow(lane, movies, rowIndex) {
@@ -835,56 +1031,68 @@
       const track = document.createElement("div");
       track.className = "row-track";
 
-      movies.forEach((movie, colIndex) => {
-        track.appendChild(buildCard(movie, lane, rowIndex, colIndex));
-      });
-
       wrap.appendChild(track);
       outer.appendChild(wrap);
       section.appendChild(header);
       section.appendChild(outer);
       rowsEl.appendChild(section);
 
-      return {
+      const row = {
         lane,
         movies: [...movies],
+        loopedMovies: [],
         section,
         wrap,
         track,
-        page: 1,
+        page: INITIAL_ROW_PAGES,
         loadingMore: false
       };
+
+      rebuildRow(row, rowIndex);
+      return row;
     }
 
     function currentMovie() {
       const row = rows[focusedRow];
       if (!row) return null;
-      const col = Math.max(0, Math.min(focusedCol[focusedRow] || 0, row.movies.length - 1));
-      return row.movies[col] || null;
+      const real = focusedCol[focusedRow] ?? 0;
+      return row.movies[real] || null;
     }
 
     async function maybeLoadMore(rowIndex) {
       const row = rows[rowIndex];
       if (!row || row.loadingMore) return;
+      if (row.movies.length >= MAX_MOVIES_PER_ROW) return;
 
-      const col = focusedCol[rowIndex] || 0;
-      if (col < row.movies.length - 5) return;
+      const realIndex = focusedCol[rowIndex] || 0;
+      if (realIndex < row.movies.length - 12) return;
 
       row.loadingMore = true;
 
       try {
         const nextPage = row.page + 1;
-        const more = await fetchLanePage(row.lane.key, nextPage);
+        const pages = await Promise.all([
+          fetchLanePage(row.lane.key, nextPage),
+          fetchLanePage(row.lane.key, nextPage + 1)
+        ]);
+
+        const more = pages.flat();
         const existing = new Set(row.movies.map(m => m.id));
         const fresh = more.filter(m => !existing.has(m.id));
 
         if (fresh.length) {
-          const start = row.movies.length;
           row.movies.push(...fresh);
-          fresh.forEach((movie, i) => {
-            row.track.appendChild(buildCard(movie, row.lane, rowIndex, start + i));
-          });
-          row.page = nextPage;
+          row.page = nextPage + 1;
+          rebuildRow(row, rowIndex);
+
+          if (focusedLoopCol[rowIndex] == null) {
+            focusedLoopCol[rowIndex] = LOOP_PAD;
+          }
+
+          const currentReal = focusedCol[rowIndex] || 0;
+          focusedLoopCol[rowIndex] = currentReal + LOOP_PAD;
+          jumpTrackToLoopIndex(row, focusedLoopCol[rowIndex]);
+          applyFocus(false);
         }
       } catch (e) {
         console.error(e);
@@ -893,24 +1101,19 @@
       }
     }
 
-    function applyFocus(scrollIntoView = true) {
-      document.querySelectorAll(".card.focused").forEach(el => el.classList.remove("focused"));
-      document.querySelectorAll(".row.active").forEach(el => el.classList.remove("active"));
+    function getCurrentTranslateX(el) {
+      const style = getComputedStyle(el);
+      const matrix = style.transform || style.webkitTransform || "none";
+      if (matrix === "none") return 0;
+      const values = matrix.match(/matrix.*\((.+)\)/);
+      if (!values) return 0;
+      const parts = values[1].split(", ");
+      return parseFloat(parts[4]) || 0;
+    }
 
-      const row = rows[focusedRow];
-      if (!row) return;
-
-      if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
-
-      const maxCol = row.movies.length - 1;
-      focusedCol[focusedRow] = Math.max(0, Math.min(focusedCol[focusedRow], maxCol));
-
-      const col = focusedCol[focusedRow];
-      const card = row.track.children[col];
+    function moveTrackToLoopIndex(row, loopIndex, animated = true) {
+      const card = row.track.children[loopIndex];
       if (!card) return;
-
-      row.section.classList.add("active");
-      card.classList.add("focused");
 
       const cardLeft = card.offsetLeft;
       const cardRight = cardLeft + card.offsetWidth;
@@ -935,26 +1138,70 @@
         newShift = Math.max(maxShift, Math.min(0, newShift));
       }
 
+      row.track.style.transition = animated
+        ? "transform .55s cubic-bezier(.2,.7,.2,1)"
+        : "none";
+
       row.track.style.transform = `translateX(${newShift}px)`;
 
-      if (scrollIntoView) {
-        row.section.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (!animated) {
+        requestAnimationFrame(() => {
+          row.track.style.transition = "transform .55s cubic-bezier(.2,.7,.2,1)";
+        });
       }
-
-      const movie = currentMovie();
-      if (movie) updateHero(movie, row.lane);
-
-      maybeLoadMore(focusedRow);
     }
 
-    function getCurrentTranslateX(el) {
-      const style = getComputedStyle(el);
-      const matrix = style.transform || style.webkitTransform || "none";
-      if (matrix === "none") return 0;
-      const values = matrix.match(/matrix.*\((.+)\)/);
-      if (!values) return 0;
-      const parts = values[1].split(", ");
-      return parseFloat(parts[4]) || 0;
+    function jumpTrackToLoopIndex(row, loopIndex) {
+      moveTrackToLoopIndex(row, loopIndex, false);
+    }
+
+    function normalizeLoopPosition(rowIndex) {
+      const row = rows[rowIndex];
+      const realLength = row.movies.length;
+      let loopIndex = focusedLoopCol[rowIndex];
+
+      if (loopIndex < LOOP_PAD) {
+        loopIndex += realLength;
+        focusedLoopCol[rowIndex] = loopIndex;
+        jumpTrackToLoopIndex(row, loopIndex);
+      } else if (loopIndex >= LOOP_PAD + realLength) {
+        loopIndex -= realLength;
+        focusedLoopCol[rowIndex] = loopIndex;
+        jumpTrackToLoopIndex(row, loopIndex);
+      }
+
+      focusedCol[rowIndex] = getRealIndex(focusedLoopCol[rowIndex], realLength);
+    }
+
+    function stopHeroPreview() {
+      clearTimeout(previewTimer);
+      previewTimer = null;
+      previewMovieId = null;
+      const heroVideo = document.getElementById("hero-video");
+      heroVideo.classList.remove("playing");
+      heroVideo.innerHTML = "";
+    }
+
+    function scheduleHeroPreview(movieId) {
+      stopHeroPreview();
+      previewMovieId = movieId;
+
+      previewTimer = setTimeout(async () => {
+        try {
+          if (detailOpen || previewMovieId !== movieId) return;
+          const full = await fetchMovie(movieId);
+          if (previewMovieId !== movieId) return;
+
+          const clip = pickTrailer(full);
+          if (!clip) return;
+
+          const heroVideo = document.getElementById("hero-video");
+          heroVideo.innerHTML = `<iframe src="${clip.url}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+          heroVideo.classList.add("playing");
+        } catch (e) {
+          console.error(e);
+        }
+      }, PREVIEW_DELAY_MS);
     }
 
     async function updateHero(movie, lane) {
@@ -981,18 +1228,41 @@
       }
 
       currentHeroTrailer = null;
-      document.getElementById("hero-trailer").style.display = "none";
+      const heroTrailerBtn = document.getElementById("hero-trailer");
+      heroTrailerBtn.style.display = "none";
+      heroTrailerBtn.textContent = "Watch trailer";
+
+      stopHeroPreview();
 
       try {
         const full = await fetchMovie(movie.id);
         const trailer = pickTrailer(full);
         if (trailer) {
           currentHeroTrailer = trailer;
-          document.getElementById("hero-trailer").style.display = "inline-flex";
+          heroTrailerBtn.style.display = "inline-flex";
+          heroTrailerBtn.textContent = `Watch ${trailer.label.toLowerCase()}`;
         }
       } catch (e) {
         console.error(e);
       }
+
+      scheduleHeroPreview(movie.id);
+    }
+
+    function openVideoOverlay(url) {
+      if (!url) return;
+      stopHeroPreview();
+      const overlay = document.getElementById("video-overlay");
+      const frame = document.getElementById("video-frame");
+      frame.src = url;
+      overlay.classList.add("open");
+    }
+
+    function closeVideoOverlay() {
+      const overlay = document.getElementById("video-overlay");
+      const frame = document.getElementById("video-frame");
+      frame.src = "";
+      overlay.classList.remove("open");
     }
 
     async function openDetailFromFocus() {
@@ -1002,6 +1272,7 @@
 
       try {
         detailOpen = true;
+        stopHeroPreview();
         document.getElementById("detail").classList.add("open");
 
         document.getElementById("detail-title").textContent = "Loading...";
@@ -1042,7 +1313,9 @@
         const trailer = pickTrailer(full);
         if (trailer) {
           currentDetailTrailer = trailer;
-          document.getElementById("detail-trailer").style.display = "inline-flex";
+          const btn = document.getElementById("detail-trailer");
+          btn.style.display = "inline-flex";
+          btn.textContent = `Watch ${trailer.label.toLowerCase()}`;
         }
       } catch (err) {
         console.error(err);
@@ -1053,6 +1326,40 @@
     function closeDetail() {
       detailOpen = false;
       document.getElementById("detail").classList.remove("open");
+      const movie = currentMovie();
+      if (movie) scheduleHeroPreview(movie.id);
+    }
+
+    function applyFocus(scrollIntoView = true) {
+      document.querySelectorAll(".card.focused").forEach(el => el.classList.remove("focused"));
+      document.querySelectorAll(".row.active").forEach(el => el.classList.remove("active"));
+
+      const row = rows[focusedRow];
+      if (!row || !row.loopedMovies?.length) return;
+
+      if (focusedLoopCol[focusedRow] == null) {
+        focusedLoopCol[focusedRow] = LOOP_PAD;
+      }
+
+      const loopIndex = focusedLoopCol[focusedRow];
+      const card = row.track.children[loopIndex];
+      if (!card) return;
+
+      row.section.classList.add("active");
+      card.classList.add("focused");
+
+      moveTrackToLoopIndex(row, loopIndex, true);
+      normalizeLoopPosition(focusedRow);
+
+      const realIndex = focusedCol[focusedRow];
+      const movie = row.movies[realIndex];
+      if (movie) updateHero(movie, row.lane);
+
+      if (scrollIntoView) {
+        row.section.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      maybeLoadMore(focusedRow);
     }
 
     async function init() {
@@ -1063,7 +1370,7 @@
         const laneResults = await Promise.all(
           LANES.map(async lane => ({
             lane,
-            movies: (await fetchLanePage(lane.key, 1)).slice(0, 18)
+            movies: (await fetchMultiplePages(lane.key, INITIAL_ROW_PAGES)).slice(0, INITIAL_ROW_ITEMS)
           }))
         );
 
@@ -1077,7 +1384,8 @@
         }
 
         focusedRow = 0;
-        focusedCol = {0:0};
+        focusedCol = { 0: 0 };
+        focusedLoopCol = { 0: LOOP_PAD };
         applyFocus(false);
         statusEl.textContent = "";
       } catch (err) {
@@ -1088,6 +1396,16 @@
     }
 
     document.addEventListener("keydown", (e) => {
+      const videoOpen = document.getElementById("video-overlay").classList.contains("open");
+
+      if (videoOpen) {
+        if (e.key === "Escape" || e.key === "Backspace") {
+          e.preventDefault();
+          closeVideoOverlay();
+        }
+        return;
+      }
+
       if (detailOpen) {
         if (e.key === "Escape" || e.key === "Backspace") {
           e.preventDefault();
@@ -1098,18 +1416,17 @@
 
       if (!rows.length) return;
       const row = rows[focusedRow];
-      const col = focusedCol[focusedRow] || 0;
 
       switch (e.key) {
         case "ArrowRight":
           e.preventDefault();
-          focusedCol[focusedRow] = (col + 1) % row.movies.length;
+          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow] || LOOP_PAD) + 1;
           applyFocus(false);
           break;
 
         case "ArrowLeft":
           e.preventDefault();
-          focusedCol[focusedRow] = (col - 1 + row.movies.length) % row.movies.length;
+          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow] || LOOP_PAD) - 1;
           applyFocus(false);
           break;
 
@@ -1117,6 +1434,7 @@
           e.preventDefault();
           focusedRow = (focusedRow + 1) % rows.length;
           if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
           applyFocus(true);
           break;
 
@@ -1124,6 +1442,7 @@
           e.preventDefault();
           focusedRow = (focusedRow - 1 + rows.length) % rows.length;
           if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
           applyFocus(true);
           break;
 
@@ -1142,19 +1461,25 @@
     document.getElementById("hero-open").addEventListener("click", openDetailFromFocus);
 
     document.getElementById("hero-next").addEventListener("click", () => {
-      const row = rows[focusedRow];
-      if (!row) return;
-      const col = focusedCol[focusedRow] || 0;
-      focusedCol[focusedRow] = (col + 1) % row.movies.length;
+      focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow] || LOOP_PAD) + 1;
       applyFocus(false);
     });
 
     document.getElementById("hero-trailer").addEventListener("click", () => {
-      if (currentHeroTrailer) window.open(currentHeroTrailer, "_blank");
+      if (currentHeroTrailer && currentHeroTrailer.url) {
+        openVideoOverlay(currentHeroTrailer.url);
+      }
     });
 
     document.getElementById("detail-trailer").addEventListener("click", () => {
-      if (currentDetailTrailer) window.open(currentDetailTrailer, "_blank");
+      if (currentDetailTrailer && currentDetailTrailer.url) {
+        openVideoOverlay(currentDetailTrailer.url);
+      }
+    });
+
+    document.getElementById("video-close").addEventListener("click", closeVideoOverlay);
+    document.getElementById("video-overlay").addEventListener("click", (e) => {
+      if (e.target.id === "video-overlay") closeVideoOverlay();
     });
 
     init();
