@@ -8,661 +8,331 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#06070b;
-      --panel:rgba(255,255,255,.07);
-      --panel-hi:rgba(255,255,255,.12);
-      --border:rgba(255,255,255,.10);
-      --border-hi:rgba(255,255,255,.32);
-      --text:rgba(255,255,255,.96);
-      --text-2:rgba(255,255,255,.72);
-      --text-3:rgba(255,255,255,.42);
-      --gold:#ffd54a;
-      --row-pad:56px;
-      --card-w:360px;
-      --card-gap:18px;
-      --radius:16px;
-      --nav-h:72px;
+    :root {
+      --bg: #06070b;
+      --panel: rgba(255,255,255,.07);
+      --panel-hi: rgba(255,255,255,.12);
+      --border: rgba(255,255,255,.10);
+      --border-hi: rgba(255,255,255,.32);
+      --text: rgba(255,255,255,.96);
+      --text-2: rgba(255,255,255,.72);
+      --text-3: rgba(255,255,255,.42);
+      --gold: #ffd54a;
+      --row-pad: 56px;
+      --card-w: 360px;
+      --card-gap: 18px;
+      --radius: 16px;
+      --nav-h: 72px;
     }
 
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{
-      font-family:"DM Sans",sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      overflow-x:hidden;
-      overflow-y:auto;
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
-    #bg,#bg-next{
-      position:fixed;
-      inset:-80px;
-      background-size:cover;
-      background-position:center;
-      transform:scale(1.12);
-      filter:blur(80px) saturate(1.2) brightness(.26);
-      z-index:0;
+    /* ── AMBIENT ── */
+    #bg, #bg-next {
+      position: fixed;
+      inset: -80px;
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.12);
+      filter: blur(80px) saturate(1.2) brightness(.26);
+      z-index: 0;
     }
-
-    #bg-next{
-      opacity:0;
-      transition:opacity .8s ease;
-    }
-
-    #bg-overlay{
-      position:fixed;
-      inset:0;
-      z-index:1;
-      pointer-events:none;
+    #bg-next { opacity: 0; transition: opacity .8s ease; }
+    #bg-overlay {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
       background:
         radial-gradient(ellipse 85% 55% at 50% 0%, rgba(20,24,34,.18), rgba(6,7,11,.92)),
         linear-gradient(to bottom, rgba(6,7,11,.35), rgba(6,7,11,.65) 35%, rgba(6,7,11,1) 100%);
     }
-
-    body::after{
-      content:"";
-      position:fixed;
-      inset:0;
-      z-index:2;
-      pointer-events:none;
-      opacity:.02;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    body::after {
+      content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      opacity: .02;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
-    #app{position:relative;z-index:5;min-height:100vh}
+    #app { position: relative; z-index: 5; min-height: 100vh; }
 
-    #nav{
-      position:sticky;
-      top:0;
-      z-index:30;
-      height:var(--nav-h);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 var(--row-pad);
-      background:rgba(6,7,11,.55);
-      backdrop-filter:blur(24px);
-      border-bottom:1px solid rgba(255,255,255,.08);
+    /* ── NAV ── */
+    #nav {
+      position: sticky; top: 0; z-index: 30;
+      height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 var(--row-pad);
+      background: rgba(6,7,11,.55);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .brand { font-size: 28px; font-weight: 700; letter-spacing: -.03em; }
+    .brand span { color: var(--text-3); font-weight: 400; }
+    .nav-help { display: flex; gap: 12px; flex-wrap: wrap; color: var(--text-3); font-size: 12px; }
+    .key {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+    }
+    .key b {
+      display: inline-block; min-width: 24px; padding: 3px 7px;
+      border-radius: 8px; background: rgba(255,255,255,.08);
+      color: var(--text-2); font-weight: 700; text-align: center;
     }
 
-    .brand{
-      font-size:28px;
-      font-weight:700;
-      letter-spacing:-.03em;
+    /* ── HERO ── */
+    #hero {
+      position: relative; min-height: 72vh;
+      display: flex; align-items: end;
+      padding: 40px var(--row-pad) 48px; overflow: hidden;
     }
-    .brand span{
-      color:var(--text-3);
-      font-weight:400;
+    #hero-image {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: .33; transform: scale(1.03);
+      transition: background-image .4s ease, opacity .4s ease;
     }
-
-    .nav-help{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      color:var(--text-3);
-      font-size:12px;
-    }
-
-    .key{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-    }
-
-    .key b{
-      display:inline-block;
-      min-width:24px;
-      padding:3px 7px;
-      border-radius:8px;
-      background:rgba(255,255,255,.08);
-      color:var(--text-2);
-      font-weight:700;
-      text-align:center;
-    }
-
-    #hero{
-      position:relative;
-      min-height:72vh;
-      display:flex;
-      align-items:end;
-      padding:40px var(--row-pad) 48px;
-      overflow:hidden;
-    }
-
-    #hero-image{
-      position:absolute;
-      inset:0;
-      background-size:cover;
-      background-position:center;
-      opacity:.33;
-      transform:scale(1.03);
-      transition:background-image .4s ease, opacity .4s ease;
-    }
-
-    #hero-image::after{
-      content:"";
-      position:absolute;
-      inset:0;
+    #hero-image::after {
+      content: ""; position: absolute; inset: 0;
       background:
         linear-gradient(to right, rgba(6,7,11,.88) 0%, rgba(6,7,11,.55) 38%, rgba(6,7,11,.20) 68%, rgba(6,7,11,.65) 100%),
         linear-gradient(to top, rgba(6,7,11,1) 0%, rgba(6,7,11,.45) 45%, rgba(6,7,11,.2) 100%);
     }
+    #hero-content { position: relative; z-index: 2; width: min(900px, 100%); }
+    .eyebrow {
+      color: var(--text-3); text-transform: uppercase; letter-spacing: .18em;
+      font-size: 12px; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .eyebrow::before {
+      content: ""; display: inline-block; width: 28px; height: 1px;
+      background: rgba(255,255,255,.22);
+    }
+    #hero-title {
+      font-size: clamp(42px,6vw,86px); line-height: .94;
+      letter-spacing: -.045em; margin: 0 0 20px;
+      text-shadow: 0 8px 40px rgba(0,0,0,.45);
+    }
+    #hero-sub {
+      color: var(--text-2); font-size: clamp(17px,1.8vw,21px);
+      line-height: 1.55; max-width: 760px; margin-bottom: 22px;
+    }
+    #hero-meta, #hero-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+    #hero-meta { margin-bottom: 14px; }
+    #hero-tags { margin-bottom: 22px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 999px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.10);
+      color: var(--text-2); font-size: 14px; font-weight: 500;
+    }
+    .pill.gold { color: var(--gold); border-color: rgba(255,213,74,.25); background: rgba(255,213,74,.07); }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; }
+    .btn {
+      border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.08);
+      color: var(--text); padding: 14px 18px; border-radius: 12px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+    .btn:hover, .btn:focus-visible {
+      transform: translateY(-1px); border-color: rgba(255,255,255,.28);
+      background: rgba(255,255,255,.13); outline: none;
+    }
+    .btn.primary { background: rgba(255,255,255,.95); color: #0c0e14; }
 
-    #hero-video{
-      position:absolute;
-      inset:0;
-      opacity:0;
-      transition:opacity .45s ease;
-      pointer-events:none;
+    /* ── ROWS ── */
+    #rows { padding-bottom: 80px; }
+    .row { margin-bottom: 14px; }
+    .row-header { display: flex; align-items: center; gap: 14px; padding: 0 var(--row-pad) 16px; }
+    .row-title {
+      font-size: 24px; font-weight: 700; letter-spacing: -.03em;
+      color: var(--text-2); transition: color 180ms ease;
+    }
+    .row.active .row-title { color: var(--text); }
+    .row-line { flex: 1; height: 1px; background: rgba(255,255,255,.08); }
+    .row-track-outer { position: relative; }
+    .row-track-outer::after {
+      content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 140px;
+      pointer-events: none;
+      background: linear-gradient(to right, transparent, rgba(6,7,11,.92));
+    }
+    .row-wrap { overflow: hidden; padding: 4px var(--row-pad) 30px; }
+    .row-track {
+      display: flex; gap: var(--card-gap); will-change: transform;
+      transition: transform .55s cubic-bezier(.2,.7,.2,1);
     }
 
-    #hero-video.playing{
-      opacity:1;
+    /* ── CARDS ── */
+    .card {
+      position: relative; width: var(--card-w); flex: 0 0 var(--card-w);
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      box-shadow: 0 18px 44px rgba(0,0,0,.22);
+      transform: scale(1);
+      transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease, opacity .22s ease;
+    }
+    .row.active .card:not(.focused) { opacity: .78; }
+    .card.focused {
+      transform: scale(1.06) translateY(-6px);
+      border-color: var(--border-hi); background: var(--panel-hi);
+      box-shadow: 0 28px 70px rgba(0,0,0,.45); z-index: 2;
     }
 
-    #hero-video iframe{
-      width:100%;
-      height:100%;
-      border:0;
+    /* Card image + video overlay */
+    .card-image-wrap {
+      position: relative; aspect-ratio: 16/9;
+      background: rgba(255,255,255,.04);
+    }
+    .card-image-wrap::after {
+      content: ""; position: absolute; inset: auto 0 0 0; height: 50%;
+      background: linear-gradient(to bottom, transparent, rgba(10,12,18,.88));
+      pointer-events: none; z-index: 1;
+    }
+    .card img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .card-video-wrap {
+      position: absolute; inset: 0; background: #000;
+      opacity: 0; transition: opacity .35s ease;
+      pointer-events: none; z-index: 2;
+    }
+    .card-video-wrap.playing { opacity: 1; }
+    .card-video-wrap iframe { width: 100%; height: 100%; border: 0; }
+
+    /* Card body */
+    .card-body { padding: 14px 16px 16px; }
+    .card-title {
+      font-size: 17px; font-weight: 700; letter-spacing: -.02em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 8px;
+    }
+    .card-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; color: var(--text-3); font-size: 13px; margin-bottom: 8px;
+    }
+    .card-rating { color: var(--gold); font-weight: 700; }
+    .card-cast {
+      font-size: 12px; color: var(--text-3);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      min-height: 16px; line-height: 1.4;
+    }
+    .card-reason {
+      font-size: 13px; line-height: 1.45; color: var(--text-2);
+      min-height: 38px;
+      display: -webkit-box; -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2; overflow: hidden;
     }
 
-    #hero-video::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:
-        linear-gradient(to right, rgba(6,7,11,.88) 0%, rgba(6,7,11,.55) 38%, rgba(6,7,11,.20) 68%, rgba(6,7,11,.65) 100%),
-        linear-gradient(to top, rgba(6,7,11,1) 0%, rgba(6,7,11,.45) 45%, rgba(6,7,11,.2) 100%);
+    /* ── DETAIL PANEL ── */
+    #detail {
+      position: fixed; inset: 0; z-index: 100;
+      pointer-events: none; background: rgba(3,4,8,0);
+      backdrop-filter: blur(0); transition: background .22s ease, backdrop-filter .22s ease;
+    }
+    #detail.open {
+      pointer-events: all; background: rgba(3,4,8,.78); backdrop-filter: blur(10px);
+    }
+    #detail-panel {
+      position: absolute; inset: 5vh 4vw; border-radius: 24px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(10,12,18,.92);
+      box-shadow: 0 50px 130px rgba(0,0,0,.65);
+      transform: translateY(16px) scale(.98); opacity: 0;
+      transition: transform .22s ease, opacity .22s ease;
+      display: flex; flex-direction: column;
+    }
+    #detail.open #detail-panel { transform: translateY(0) scale(1); opacity: 1; }
+    #detail-backdrop-wrap {
+      position: relative; aspect-ratio: 21/8; flex-shrink: 0;
+      background: rgba(255,255,255,.04);
+    }
+    #detail-backdrop-wrap::after {
+      content: ""; position: absolute; inset: auto 0 0 0; height: 70%;
+      background: linear-gradient(to bottom, transparent, rgba(10,12,18,.98));
+      pointer-events: none;
+    }
+    #detail-backdrop { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #detail-close {
+      position: absolute; top: 18px; right: 18px; z-index: 2;
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.35);
+      color: white; font-size: 22px; cursor: pointer;
+    }
+    #detail-body { overflow-y: auto; padding: 26px 34px 38px; }
+    #detail-title {
+      font-size: clamp(30px,4vw,52px); line-height: 1;
+      letter-spacing: -.04em; margin: 0 0 10px;
+    }
+    #detail-tagline { color: var(--text-3); font-size: 17px; font-style: italic; margin-bottom: 18px; }
+    #detail-pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    #detail-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+    #detail-reasons {
+      display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 12px; margin-bottom: 28px;
+    }
+    .reason-box {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px; padding: 15px 16px;
+    }
+    .reason-box .label {
+      color: var(--text-3); text-transform: uppercase; letter-spacing: .14em;
+      font-size: 10px; margin-bottom: 8px;
+    }
+    .reason-box .value { color: var(--text); font-size: 15px; line-height: 1.45; }
+    #detail-overview { color: var(--text-2); line-height: 1.75; font-size: 16px; margin-bottom: 26px; }
+    #detail-cast-title {
+      color: var(--text-3); text-transform: uppercase;
+      letter-spacing: .14em; font-size: 12px; margin-bottom: 12px;
+    }
+    #detail-cast { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cast-chip {
+      padding: 10px 12px; border-radius: 12px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      color: var(--text-2); font-size: 14px;
     }
 
-    #hero-content{
-      position:relative;
-      z-index:2;
-      width:min(900px,100%);
+    /* ── VIDEO OVERLAY ── */
+    #video-overlay {
+      position: fixed; inset: 0; z-index: 140;
+      background: rgba(0,0,0,.88); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
     }
-
-    .eyebrow{
-      color:var(--text-3);
-      text-transform:uppercase;
-      letter-spacing:.18em;
-      font-size:12px;
-      margin-bottom:18px;
-      display:flex;
-      align-items:center;
-      gap:12px;
+    #video-overlay.open { display: flex; }
+    #video-panel {
+      width: min(92vw,1400px); aspect-ratio: 16/9; position: relative;
+      background: #000; border-radius: 18px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 40px 100px rgba(0,0,0,.65);
     }
-
-    .eyebrow::before{
-      content:"";
-      display:inline-block;
-      width:28px;
-      height:1px;
-      background:rgba(255,255,255,.22);
+    #video-close {
+      position: absolute; top: 14px; right: 14px; z-index: 2;
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.45);
+      color: #fff; font-size: 22px; cursor: pointer;
     }
+    #video-frame { width: 100%; height: 100%; border: 0; }
 
-    #hero-title{
-      font-size:clamp(42px,6vw,86px);
-      line-height:.94;
-      letter-spacing:-.045em;
-      margin:0 0 20px;
-      text-shadow:0 8px 40px rgba(0,0,0,.45);
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; left: 50%; bottom: 22px;
+      transform: translateX(-50%) translateY(16px); z-index: 120;
+      background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(18px); color: var(--text);
+      padding: 12px 16px; border-radius: 12px;
+      opacity: 0; transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
     }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    #hero-sub{
-      color:var(--text-2);
-      font-size:clamp(17px,1.8vw,21px);
-      line-height:1.55;
-      max-width:760px;
-      margin-bottom:22px;
-    }
-
-    #hero-meta,#hero-tags{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    #hero-meta{margin-bottom:14px}
-    #hero-tags{margin-bottom:22px}
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
-      color:var(--text-2);
-      font-size:14px;
-      font-weight:500;
-    }
-
-    .pill.gold{
-      color:var(--gold);
-      border-color:rgba(255,213,74,.25);
-      background:rgba(255,213,74,.07);
-    }
-
-    .hero-actions{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-      margin-top:18px;
-    }
-
-    .btn{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.08);
-      color:var(--text);
-      padding:14px 18px;
-      border-radius:12px;
-      font-size:15px;
-      font-weight:700;
-      cursor:pointer;
-      transition:transform 140ms ease,border-color 140ms ease,background 140ms ease;
-    }
-
-    .btn:hover,.btn:focus-visible{
-      transform:translateY(-1px);
-      border-color:rgba(255,255,255,.28);
-      background:rgba(255,255,255,.13);
-      outline:none;
-    }
-
-    .btn.primary{
-      background:rgba(255,255,255,.95);
-      color:#0c0e14;
-    }
-
-    #rows{padding-bottom:80px}
-
-    .row{margin-bottom:14px}
-    .row-header{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      padding:0 var(--row-pad) 16px;
-    }
-
-    .row-title{
-      font-size:24px;
-      font-weight:700;
-      letter-spacing:-.03em;
-      color:var(--text-2);
-      transition:color 180ms ease;
-    }
-
-    .row.active .row-title{color:var(--text)}
-    .row-line{
-      flex:1;
-      height:1px;
-      background:rgba(255,255,255,.08);
-    }
-
-    .row-track-outer{position:relative}
-    .row-track-outer::after{
-      content:"";
-      position:absolute;
-      top:0;
-      right:0;
-      bottom:0;
-      width:140px;
-      pointer-events:none;
-      background:linear-gradient(to right, transparent, rgba(6,7,11,.92));
-    }
-
-    .row-wrap{
-      overflow:hidden;
-      padding:4px var(--row-pad) 30px;
-    }
-
-    .row-track{
-      display:flex;
-      gap:var(--card-gap);
-      will-change:transform;
-      transition:transform .55s cubic-bezier(.2,.7,.2,1);
-    }
-
-    .card{
-      position:relative;
-      width:var(--card-w);
-      flex:0 0 var(--card-w);
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      overflow:hidden;
-      box-shadow:0 18px 44px rgba(0,0,0,.22);
-      transform:scale(1);
-      transition:transform .22s ease,border-color .22s ease,background .22s ease,box-shadow .22s ease,opacity .22s ease;
-    }
-
-    .row.active .card:not(.focused){opacity:.78}
-
-    .card.focused{
-      transform:scale(1.06) translateY(-6px);
-      border-color:var(--border-hi);
-      background:var(--panel-hi);
-      box-shadow:0 28px 70px rgba(0,0,0,.45);
-      z-index:2;
-    }
-
-    .card-image-wrap{
-      position:relative;
-      aspect-ratio:16/9;
-      background:rgba(255,255,255,.04);
-    }
-
-    .card-image-wrap::after{
-      content:"";
-      position:absolute;
-      inset:auto 0 0 0;
-      height:50%;
-      background:linear-gradient(to bottom, transparent, rgba(10,12,18,.88));
-      pointer-events:none;
-    }
-
-    .card img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .card-body{padding:14px 16px 16px}
-
-    .card-title{
-      font-size:17px;
-      font-weight:700;
-      letter-spacing:-.02em;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      margin-bottom:8px;
-    }
-
-    .card-meta{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      color:var(--text-3);
-      font-size:13px;
-      margin-bottom:10px;
-    }
-
-    .card-reason{
-      font-size:13px;
-      line-height:1.45;
-      color:var(--text-2);
-      min-height:38px;
-      display:-webkit-box;
-      -webkit-box-orient:vertical;
-      -webkit-line-clamp:2;
-      overflow:hidden;
-    }
-
-    .card-rating{color:var(--gold);font-weight:700}
-
-    .loading,.error{
-      padding:0 var(--row-pad);
-      color:var(--text-3);
-      font-size:15px;
-    }
-
-    #detail{
-      position:fixed;
-      inset:0;
-      z-index:100;
-      pointer-events:none;
-      background:rgba(3,4,8,0);
-      backdrop-filter:blur(0);
-      transition:background .22s ease,backdrop-filter .22s ease;
-    }
-
-    #detail.open{
-      pointer-events:all;
-      background:rgba(3,4,8,.78);
-      backdrop-filter:blur(10px);
-    }
-
-    #detail-panel{
-      position:absolute;
-      inset:5vh 4vw;
-      border-radius:24px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(10,12,18,.92);
-      box-shadow:0 50px 130px rgba(0,0,0,.65);
-      transform:translateY(16px) scale(.98);
-      opacity:0;
-      transition:transform .22s ease,opacity .22s ease;
-      display:flex;
-      flex-direction:column;
-    }
-
-    #detail.open #detail-panel{
-      transform:translateY(0) scale(1);
-      opacity:1;
-    }
-
-    #detail-backdrop-wrap{
-      position:relative;
-      aspect-ratio:21/8;
-      flex-shrink:0;
-      background:rgba(255,255,255,.04);
-    }
-
-    #detail-backdrop-wrap::after{
-      content:"";
-      position:absolute;
-      inset:auto 0 0 0;
-      height:70%;
-      background:linear-gradient(to bottom, transparent, rgba(10,12,18,.98));
-      pointer-events:none;
-    }
-
-    #detail-backdrop{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    #detail-close{
-      position:absolute;
-      top:18px;
-      right:18px;
-      z-index:2;
-      width:42px;
-      height:42px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.35);
-      color:white;
-      font-size:22px;
-      cursor:pointer;
-    }
-
-    #detail-body{
-      overflow-y:auto;
-      padding:26px 34px 38px;
-    }
-
-    #detail-title{
-      font-size:clamp(30px,4vw,52px);
-      line-height:1;
-      letter-spacing:-.04em;
-      margin:0 0 10px;
-    }
-
-    #detail-tagline{
-      color:var(--text-3);
-      font-size:17px;
-      font-style:italic;
-      margin-bottom:18px;
-    }
-
-    #detail-pills{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:24px;
-    }
-
-    #detail-actions{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:22px;
-    }
-
-    #detail-reasons{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:12px;
-      margin-bottom:28px;
-    }
-
-    .reason-box{
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:14px;
-      padding:15px 16px;
-    }
-
-    .reason-box .label{
-      color:var(--text-3);
-      text-transform:uppercase;
-      letter-spacing:.14em;
-      font-size:10px;
-      margin-bottom:8px;
-    }
-
-    .reason-box .value{
-      color:var(--text);
-      font-size:15px;
-      line-height:1.45;
-    }
-
-    #detail-overview{
-      color:var(--text-2);
-      line-height:1.75;
-      font-size:16px;
-      margin-bottom:26px;
-    }
-
-    #detail-cast-title{
-      color:var(--text-3);
-      text-transform:uppercase;
-      letter-spacing:.14em;
-      font-size:12px;
-      margin-bottom:12px;
-    }
-
-    #detail-cast{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .cast-chip{
-      padding:10px 12px;
-      border-radius:12px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:var(--text-2);
-      font-size:14px;
-    }
-
-    #video-overlay{
-      position:fixed;
-      inset:0;
-      z-index:140;
-      background:rgba(0,0,0,.88);
-      backdrop-filter:blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-    }
-
-    #video-overlay.open{
-      display:flex;
-    }
-
-    #video-panel{
-      width:min(92vw,1400px);
-      aspect-ratio:16/9;
-      position:relative;
-      background:#000;
-      border-radius:18px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.14);
-      box-shadow:0 40px 100px rgba(0,0,0,.65);
-    }
-
-    #video-close{
-      position:absolute;
-      top:14px;
-      right:14px;
-      z-index:2;
-      width:42px;
-      height:42px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(0,0,0,.45);
-      color:#fff;
-      font-size:22px;
-      cursor:pointer;
-    }
-
-    #video-frame-wrap{
-      width:100%;
-      height:100%;
-    }
-
-    #video-frame{
-      width:100%;
-      height:100%;
-      border:0;
-    }
-
-    #toast{
-      position:fixed;
-      left:50%;
-      bottom:22px;
-      transform:translateX(-50%) translateY(16px);
-      z-index:120;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.14);
-      backdrop-filter:blur(18px);
-      color:var(--text);
-      padding:12px 16px;
-      border-radius:12px;
-      opacity:0;
-      transition:opacity .18s ease,transform .18s ease;
-      pointer-events:none;
-    }
-
-    #toast.show{
-      opacity:1;
-      transform:translateX(-50%) translateY(0);
-    }
-
-    @media (max-width:920px){
-      :root{
-        --row-pad:24px;
-        --card-w:280px;
-        --card-gap:14px;
-      }
-      .nav-help{display:none}
-      #detail-reasons{grid-template-columns:1fr}
+    @media (max-width:920px) {
+      :root { --row-pad: 24px; --card-w: 280px; --card-gap: 14px; }
+      .nav-help { display: none; }
+      #detail-reasons { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -684,10 +354,9 @@
 
     <section id="hero">
       <div id="hero-image"></div>
-      <div id="hero-video"></div>
       <div id="hero-content">
         <div class="eyebrow" id="hero-eyebrow">Best pick for tonight</div>
-        <h1 id="hero-title">Loading movies...</h1>
+        <h1 id="hero-title">Loading movies…</h1>
         <div id="hero-sub">Please wait while we load your TV browsing experience.</div>
         <div id="hero-meta"></div>
         <div id="hero-tags"></div>
@@ -700,9 +369,10 @@
     </section>
 
     <section id="rows"></section>
-    <div id="status" class="loading"></div>
+    <div id="status" style="padding:0 var(--row-pad);color:var(--text-3);font-size:15px;"></div>
   </div>
 
+  <!-- Detail panel -->
   <div id="detail">
     <div id="detail-panel">
       <div id="detail-backdrop-wrap">
@@ -716,7 +386,6 @@
         <div id="detail-actions">
           <button class="btn" id="detail-trailer" style="display:none;">Watch trailer</button>
         </div>
-
         <div id="detail-reasons">
           <div class="reason-box">
             <div class="label">Why this fits</div>
@@ -731,27 +400,19 @@
             <div class="value" id="reason-commit">Comfortable TV session.</div>
           </div>
         </div>
-
         <div id="detail-overview"></div>
-
         <div id="detail-cast-title">Top cast</div>
         <div id="detail-cast"></div>
       </div>
     </div>
   </div>
 
+  <!-- Full video overlay -->
   <div id="video-overlay">
     <div id="video-panel">
       <button id="video-close" aria-label="Close trailer">×</button>
-      <div id="video-frame-wrap">
-        <iframe
-          id="video-frame"
-          src=""
-          title="Trailer"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-      </div>
+      <iframe id="video-frame" src="" title="Trailer"
+        allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
     </div>
   </div>
 
@@ -759,52 +420,56 @@
 
   <script>
     const API_BASE = "https://movie-browsing.hanig.workers.dev";
-    const IMG = (p, size = "w780") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
-    const BACK = (p, size = "w1280") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
+    const IMG  = (p, size="w780")  => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
+    const BACK = (p, size="w1280") => p ? `https://image.tmdb.org/t/p/${size}${p}` : "";
 
     const LANES = [
-      { key: "tonight",   title: "Best pick for tonight", subtitle: "Confident, broad-appeal choices for an easy start" },
-      { key: "trending",  title: "Trending now", subtitle: "What people are watching this week" },
-      { key: "popular",   title: "Popular now", subtitle: "Big mainstream titles with strong visibility" },
-      { key: "reviewers", title: "Reviewers love", subtitle: "Critically strong films with serious approval" },
-      { key: "crowd",     title: "Crowd favourites", subtitle: "Widely watched films with strong audience pull" },
-      { key: "short",     title: "Under 100 minutes", subtitle: "High-value films when you want something tighter" },
-      { key: "beautiful", title: "Slow and beautiful", subtitle: "Atmospheric, emotional, and visually absorbing picks" },
-      { key: "thrill",    title: "High-stakes thrill", subtitle: "Tension, pace, and urgency for a more intense night" },
-      { key: "cult",      title: "Cult favourites", subtitle: "Older, loved, and slightly off the main path" },
-      { key: "scifi",     title: "Sci-fi worlds", subtitle: "Speculative worlds, scale, and imagination" },
-      { key: "crime",     title: "Crime and tension", subtitle: "Pressure, schemes, and sharp-edged stories" },
-      { key: "uplifting", title: "Warm and uplifting", subtitle: "Lighter energy and kinder emotional tone" },
-      { key: "dark",      title: "Dark and unsettling", subtitle: "For nights that want something heavier" },
-      { key: "family",    title: "Family animation", subtitle: "Accessible, visually friendly choices" },
-      { key: "hidden",    title: "Hidden gems", subtitle: "Strong films that are less overexposed" }
+      { key:"tonight",   title:"Best pick for tonight",  subtitle:"Confident, broad-appeal choices for an easy start" },
+      { key:"trending",  title:"Trending now",            subtitle:"What people are watching this week" },
+      { key:"popular",   title:"Popular now",             subtitle:"Big mainstream titles with strong visibility" },
+      { key:"reviewers", title:"Reviewers love",          subtitle:"Critically strong films with serious approval" },
+      { key:"crowd",     title:"Crowd favourites",        subtitle:"Widely watched films with strong audience pull" },
+      { key:"short",     title:"Under 100 minutes",       subtitle:"High-value films when you want something tighter" },
+      { key:"beautiful", title:"Slow and beautiful",      subtitle:"Atmospheric, emotional, and visually absorbing" },
+      { key:"thrill",    title:"High-stakes thrill",      subtitle:"Tension, pace, and urgency for a more intense night" },
+      { key:"cult",      title:"Cult favourites",         subtitle:"Older, loved, and slightly off the main path" },
+      { key:"scifi",     title:"Sci-fi worlds",           subtitle:"Speculative worlds, scale, and imagination" },
+      { key:"crime",     title:"Crime and tension",       subtitle:"Pressure, schemes, and sharp-edged stories" },
+      { key:"uplifting", title:"Warm and uplifting",      subtitle:"Lighter energy and kinder emotional tone" },
+      { key:"dark",      title:"Dark and unsettling",     subtitle:"For nights that want something heavier" },
+      { key:"family",    title:"Family animation",        subtitle:"Accessible, visually friendly choices" },
+      { key:"hidden",    title:"Hidden gems",             subtitle:"Strong films that are less overexposed" },
     ];
 
-    const LOOP_PAD = 4;
+    const LOOP_PAD          = 4;
     const INITIAL_ROW_PAGES = 3;
     const INITIAL_ROW_ITEMS = 50;
     const MAX_MOVIES_PER_ROW = 120;
-    const PREVIEW_DELAY_MS = 2200;
+    const PREVIEW_DELAY_MS  = 2000;  // hover delay before card video plays
 
-    let rows = [];
-    let focusedRow = 0;
-    let focusedCol = {};
+    // ── STATE ────────────────────────────────────────────────────
+    let rows           = [];
+    let focusedRow     = 0;
+    let focusedCol     = {};
     let focusedLoopCol = {};
-    let detailOpen = false;
-    let ambientUrl = "";
-    let currentHeroTrailer = null;
+    let detailOpen     = false;
+    let ambientUrl     = "";
+    let currentHeroTrailer   = null;
     let currentDetailTrailer = null;
-    let previewTimer = null;
+    let previewTimer   = null;
     let previewMovieId = null;
+    const movieCache   = {};   // shared cache so hover + detail don't double-fetch
 
-    const rowsEl = document.getElementById("rows");
-    const statusEl = document.getElementById("status");
+    // ── DOM REFS ──────────────────────────────────────────────────
+    const rowsEl  = document.getElementById("rows");
+    const statusEl= document.getElementById("status");
     const toastEl = document.getElementById("toast");
-    const bg = document.getElementById("bg");
-    const bgNext = document.getElementById("bg-next");
+    const bg      = document.getElementById("bg");
+    const bgNext  = document.getElementById("bg-next");
 
-    function showToast(message) {
-      toastEl.textContent = message;
+    // ── HELPERS ───────────────────────────────────────────────────
+    function showToast(msg) {
+      toastEl.textContent = msg;
       toastEl.classList.add("show");
       clearTimeout(showToast._t);
       showToast._t = setTimeout(() => toastEl.classList.remove("show"), 1800);
@@ -821,173 +486,173 @@
       }, 700);
     }
 
-    function setHeroImage(url) {
-      if (!url) return;
-      document.getElementById("hero-image").style.backgroundImage = `url("${url}")`;
-    }
+    function safeYear(m)   { return m.release_date ? m.release_date.slice(0,4) : "—"; }
+    function voteText(m)   { return m.vote_average ? `★ ${m.vote_average.toFixed(1)}` : "★ —"; }
+    function runtimeText(r){ return r ? `${r} min` : "Runtime unknown"; }
 
-    function safeYear(movie) {
-      return movie.release_date ? movie.release_date.slice(0, 4) : "—";
-    }
-
-    function runtimeText(runtime) {
-      if (!runtime) return "Runtime unknown";
-      return `${runtime} min`;
-    }
-
-    function voteText(movie) {
-      return movie.vote_average ? `★ ${movie.vote_average.toFixed(1)}` : "★ —";
-    }
-
-    function makeReasonText(lane) {
-      switch (lane.key) {
-        case "trending": return "Currently active, visible, and widely discussed.";
-        case "popular": return "Big titles with broad current appeal.";
-        case "reviewers": return "Strong critical approval and higher quality signals.";
-        case "crowd": return "High visibility with strong public pull.";
-        case "short": return "Short, efficient, and still highly watchable.";
-        case "beautiful": return "Best when you want mood, texture, and atmosphere.";
-        case "thrill": return "Fast, tense, and built for momentum.";
-        case "cult": return "Older favourites with enduring niche love.";
-        case "scifi": return "Ideas, worlds, and cinematic scale.";
-        case "crime": return "Schemes, danger, and sharp tension.";
-        case "uplifting": return "Lighter energy and a more comforting tone.";
-        case "dark": return "Unsettling, intense, and heavier in mood.";
-        case "family": return "Accessible and suitable for a wider audience.";
-        case "hidden": return "Less obvious titles with strong upside.";
-        case "tonight":
-        default: return "A reliable, accessible pick with strong broad appeal.";
-      }
-    }
-
-    function bestForText(lane) {
-      switch (lane.key) {
-        case "trending": return "Seeing what is hot right now.";
-        case "popular": return "A safe mainstream movie night.";
-        case "reviewers": return "When quality matters more than hype.";
-        case "crowd": return "Easy group-friendly browsing.";
-        case "short": return "A weeknight or lower-energy evening.";
-        case "beautiful": return "Watching with patience and full attention.";
-        case "thrill": return "A more alert, edge-of-seat session.";
-        case "cult": return "A more curious or nostalgic night.";
-        case "scifi": return "Big ideas and immersive worlds.";
-        case "crime": return "Sharper, tense, adult viewing.";
-        case "uplifting": return "A softer, more comforting mood.";
-        case "dark": return "Leaning into a heavier tone.";
-        case "family": return "Shared viewing with lower friction.";
-        case "hidden": return "Discovery over familiarity.";
-        case "tonight":
-        default: return "A balanced movie night without overthinking it.";
-      }
-    }
-
-    function commitmentText(movie) {
-      if (!movie.runtime) return "Comfortable TV session.";
-      if (movie.runtime <= 100) return "Low commitment.";
-      if (movie.runtime <= 130) return "Moderate commitment.";
+    function commitmentText(m) {
+      if (!m.runtime) return "Comfortable TV session.";
+      if (m.runtime <= 100) return "Low commitment.";
+      if (m.runtime <= 130) return "Moderate commitment.";
       return "Longer sit-down feature.";
     }
 
+    function makeReasonText(lane) {
+      const map = {
+        trending:"Currently active, visible, and widely discussed.",
+        popular:"Big titles with broad current appeal.",
+        reviewers:"Strong critical approval and higher quality signals.",
+        crowd:"High visibility with strong public pull.",
+        short:"Short, efficient, and still highly watchable.",
+        beautiful:"Best when you want mood, texture, and atmosphere.",
+        thrill:"Fast, tense, and built for momentum.",
+        cult:"Older favourites with enduring niche love.",
+        scifi:"Ideas, worlds, and cinematic scale.",
+        crime:"Schemes, danger, and sharp tension.",
+        uplifting:"Lighter energy and a more comforting tone.",
+        dark:"Unsettling, intense, and heavier in mood.",
+        family:"Accessible and suitable for a wider audience.",
+        hidden:"Less obvious titles with strong upside.",
+      };
+      return map[lane.key] || "A reliable, accessible pick with strong broad appeal.";
+    }
+
+    function bestForText(lane) {
+      const map = {
+        trending:"Seeing what is hot right now.",
+        popular:"A safe mainstream movie night.",
+        reviewers:"When quality matters more than hype.",
+        crowd:"Easy group-friendly browsing.",
+        short:"A weeknight or lower-energy evening.",
+        beautiful:"Watching with patience and full attention.",
+        thrill:"A more alert, edge-of-seat session.",
+        cult:"A more curious or nostalgic night.",
+        scifi:"Big ideas and immersive worlds.",
+        crime:"Sharper, tense, adult viewing.",
+        uplifting:"A softer, more comforting mood.",
+        dark:"Leaning into a heavier tone.",
+        family:"Shared viewing with lower friction.",
+        hidden:"Discovery over familiarity.",
+      };
+      return map[lane.key] || "A balanced movie night without overthinking it.";
+    }
+
     function pickTrailer(movie) {
-      const vids = movie && movie.videos && Array.isArray(movie.videos.results)
-        ? movie.videos.results
-        : [];
-
-      const priority = ["Trailer", "Teaser", "Clip", "Featurette"];
-      for (const type of priority) {
-        const found = vids.find(v => v.site === "YouTube" && v.type === type && v.key);
-        if (found) {
-          return {
-            url: `https://www.youtube.com/embed/${found.key}?autoplay=1&mute=1&rel=0&playsinline=1`,
-            label: type
-          };
-        }
+      const vids = movie?.videos?.results || [];
+      for (const type of ["Trailer","Teaser","Clip","Featurette"]) {
+        const v = vids.find(v => v.site === "YouTube" && v.type === type && v.key);
+        if (v) return { url: `https://www.youtube.com/embed/${v.key}?autoplay=1&mute=1&rel=0&playsinline=1`, label: type };
       }
-
-      const anyYoutube = vids.find(v => v.site === "YouTube" && v.key);
-      if (anyYoutube) {
-        return {
-          url: `https://www.youtube.com/embed/${anyYoutube.key}?autoplay=1&mute=1&rel=0&playsinline=1`,
-          label: anyYoutube.type || "Video"
-        };
-      }
-
+      const any = vids.find(v => v.site === "YouTube" && v.key);
+      if (any) return { url: `https://www.youtube.com/embed/${any.key}?autoplay=1&mute=1&rel=0&playsinline=1`, label: any.type || "Video" };
       return null;
     }
 
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&","&amp;").replaceAll("<","&lt;")
+        .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+    }
+
+    // ── API ───────────────────────────────────────────────────────
     async function api(path) {
       const res = await fetch(`${API_BASE}${path}`);
-      if (!res.ok) throw new Error(`API error ${res.status}`);
+      if (!res.ok) throw new Error(`API ${res.status}`);
       return res.json();
     }
 
-    async function fetchLanePage(laneKey, page = 1) {
+    async function fetchLanePage(laneKey, page=1) {
       const data = await api(`/api/browse?intent=${encodeURIComponent(laneKey)}&page=${page}`);
-      return Array.isArray(data.results) ? data.results.filter(m => m && (m.backdrop_path || m.poster_path)) : [];
+      return Array.isArray(data.results) ? data.results.filter(m => m && (m.backdrop_path||m.poster_path)) : [];
     }
 
-    async function fetchMultiplePages(laneKey, totalPages = 3) {
-      const promises = [];
-      for (let page = 1; page <= totalPages; page++) {
-        promises.push(fetchLanePage(laneKey, page));
-      }
-      const results = await Promise.all(promises);
+    async function fetchMultiplePages(laneKey, totalPages=3) {
+      const results = await Promise.all(
+        Array.from({length:totalPages},(_,i) => fetchLanePage(laneKey, i+1))
+      );
       return results.flat();
     }
 
     async function fetchMovie(id) {
-      return api(`/api/movie?id=${encodeURIComponent(id)}`);
+      if (movieCache[id]) return movieCache[id];
+      const data = await api(`/api/movie?id=${encodeURIComponent(id)}`);
+      movieCache[id] = data;
+      return data;
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
-
+    // ── LOOPING HELPERS ───────────────────────────────────────────
     function makeLoopedMovies(movies) {
       if (movies.length <= LOOP_PAD) return [...movies];
-      const head = movies.slice(0, LOOP_PAD);
-      const tail = movies.slice(-LOOP_PAD);
-      return [...tail, ...movies, ...head];
+      return [...movies.slice(-LOOP_PAD), ...movies, ...movies.slice(0,LOOP_PAD)];
     }
 
     function getRealIndex(loopIndex, realLength) {
       return (loopIndex - LOOP_PAD + realLength) % realLength;
     }
 
+    // ── BUILD CARD ────────────────────────────────────────────────
     function buildCard(movie, lane, rowIndex, realIndex, loopIndex) {
       const card = document.createElement("div");
       card.className = "card";
-      card.dataset.row = rowIndex;
+      card.dataset.row  = rowIndex;
       card.dataset.real = realIndex;
       card.dataset.loop = loopIndex;
 
-      const image = movie.backdrop_path ? IMG(movie.backdrop_path, "w780") : IMG(movie.poster_path, "w500");
+      const image = movie.backdrop_path ? IMG(movie.backdrop_path,"w780") : IMG(movie.poster_path,"w500");
 
       card.innerHTML = `
         <div class="card-image-wrap">
-          ${image ? `<img src="${image}" alt="${escapeHtml(movie.title || "")}" loading="lazy">` : ""}
+          ${image ? `<img src="${image}" alt="${escapeHtml(movie.title||"")}" loading="lazy">` : ""}
+          <div class="card-video-wrap" id="vid-${movie.id}-${loopIndex}"></div>
         </div>
         <div class="card-body">
-          <div class="card-title">${escapeHtml(movie.title || "Untitled")}</div>
+          <div class="card-title">${escapeHtml(movie.title||"Untitled")}</div>
           <div class="card-meta">
             <span>${safeYear(movie)}</span>
             <span class="card-rating">${voteText(movie)}</span>
           </div>
-          <div class="card-reason">${escapeHtml(makeReasonText(lane))}</div>
+          <div class="card-cast" id="cast-${movie.id}-${loopIndex}"></div>
         </div>
       `;
 
+      // ── HOVER: cast + video preview ──
+      let hoverTimer = null;
+
       card.addEventListener("mouseenter", () => {
-        if (detailOpen) return;
-        focusedRow = rowIndex;
-        focusedLoopCol[rowIndex] = loopIndex;
-        focusedCol[rowIndex] = realIndex;
-        applyFocus(false);
+        if (!detailOpen) {
+          focusedRow = rowIndex;
+          focusedLoopCol[rowIndex] = loopIndex;
+          focusedCol[rowIndex] = realIndex;
+          applyFocus(false);
+        }
+
+        hoverTimer = setTimeout(async () => {
+          try {
+            const full = await fetchMovie(movie.id);
+
+            // Populate cast on card
+            const castEl = document.getElementById(`cast-${movie.id}-${loopIndex}`);
+            if (castEl && !castEl.textContent && full.credits?.cast?.length) {
+              castEl.textContent = full.credits.cast.slice(0,3).map(a=>a.name).join(" · ");
+            }
+
+            // Play trailer in card
+            if (!detailOpen) {
+              const trailer = pickTrailer(full);
+              const vidEl   = document.getElementById(`vid-${movie.id}-${loopIndex}`);
+              if (trailer && vidEl) {
+                vidEl.innerHTML = `<iframe src="${trailer.url}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                vidEl.classList.add("playing");
+              }
+            }
+          } catch(e) {}
+        }, PREVIEW_DELAY_MS);
+      });
+
+      card.addEventListener("mouseleave", () => {
+        clearTimeout(hoverTimer);
+        const vidEl = document.getElementById(`vid-${movie.id}-${loopIndex}`);
+        if (vidEl) { vidEl.classList.remove("playing"); vidEl.innerHTML = ""; }
       });
 
       card.addEventListener("click", () => {
@@ -1001,10 +666,10 @@
       return card;
     }
 
+    // ── BUILD / REBUILD ROW ───────────────────────────────────────
     function rebuildRow(row, rowIndex) {
       row.loopedMovies = makeLoopedMovies(row.movies);
       row.track.innerHTML = "";
-
       row.loopedMovies.forEach((movie, loopIndex) => {
         const realIndex = getRealIndex(loopIndex, row.movies.length);
         row.track.appendChild(buildCard(movie, row.lane, rowIndex, realIndex, loopIndex));
@@ -1015,26 +680,18 @@
       const section = document.createElement("section");
       section.className = "row";
 
-      const header = document.createElement("div");
-      header.className = "row-header";
-      header.innerHTML = `
-        <div class="row-title">${escapeHtml(lane.title)}</div>
-        <div class="row-line"></div>
+      section.innerHTML = `
+        <div class="row-header">
+          <div class="row-title">${escapeHtml(lane.title)}</div>
+          <div class="row-line"></div>
+        </div>
+        <div class="row-track-outer">
+          <div class="row-wrap">
+            <div class="row-track"></div>
+          </div>
+        </div>
       `;
 
-      const outer = document.createElement("div");
-      outer.className = "row-track-outer";
-
-      const wrap = document.createElement("div");
-      wrap.className = "row-wrap";
-
-      const track = document.createElement("div");
-      track.className = "row-track";
-
-      wrap.appendChild(track);
-      outer.appendChild(wrap);
-      section.appendChild(header);
-      section.appendChild(outer);
       rowsEl.appendChild(section);
 
       const row = {
@@ -1042,179 +699,103 @@
         movies: [...movies],
         loopedMovies: [],
         section,
-        wrap,
-        track,
-        page: INITIAL_ROW_PAGES,
-        loadingMore: false
+        wrap:  section.querySelector(".row-wrap"),
+        track: section.querySelector(".row-track"),
+        page:  INITIAL_ROW_PAGES,
+        loadingMore: false,
       };
 
       rebuildRow(row, rowIndex);
       return row;
     }
 
+    // ── FOCUS + TRACK SCROLL ─────────────────────────────────────
     function currentMovie() {
       const row = rows[focusedRow];
       if (!row) return null;
-      const real = focusedCol[focusedRow] ?? 0;
-      return row.movies[real] || null;
-    }
-
-    async function maybeLoadMore(rowIndex) {
-      const row = rows[rowIndex];
-      if (!row || row.loadingMore) return;
-      if (row.movies.length >= MAX_MOVIES_PER_ROW) return;
-
-      const realIndex = focusedCol[rowIndex] || 0;
-      if (realIndex < row.movies.length - 12) return;
-
-      row.loadingMore = true;
-
-      try {
-        const nextPage = row.page + 1;
-        const pages = await Promise.all([
-          fetchLanePage(row.lane.key, nextPage),
-          fetchLanePage(row.lane.key, nextPage + 1)
-        ]);
-
-        const more = pages.flat();
-        const existing = new Set(row.movies.map(m => m.id));
-        const fresh = more.filter(m => !existing.has(m.id));
-
-        if (fresh.length) {
-          row.movies.push(...fresh);
-          row.page = nextPage + 1;
-          rebuildRow(row, rowIndex);
-
-          if (focusedLoopCol[rowIndex] == null) {
-            focusedLoopCol[rowIndex] = LOOP_PAD;
-          }
-
-          const currentReal = focusedCol[rowIndex] || 0;
-          focusedLoopCol[rowIndex] = currentReal + LOOP_PAD;
-          jumpTrackToLoopIndex(row, focusedLoopCol[rowIndex]);
-          applyFocus(false);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        row.loadingMore = false;
-      }
+      return row.movies[focusedCol[focusedRow] ?? 0] || null;
     }
 
     function getCurrentTranslateX(el) {
-      const style = getComputedStyle(el);
-      const matrix = style.transform || style.webkitTransform || "none";
-      if (matrix === "none") return 0;
-      const values = matrix.match(/matrix.*\((.+)\)/);
-      if (!values) return 0;
-      const parts = values[1].split(", ");
-      return parseFloat(parts[4]) || 0;
+      const m = getComputedStyle(el).transform;
+      if (!m || m === "none") return 0;
+      const parts = m.match(/matrix.*\((.+)\)/)?.[1]?.split(", ");
+      return parts ? parseFloat(parts[4]) || 0 : 0;
     }
 
-    function moveTrackToLoopIndex(row, loopIndex, animated = true) {
+    function moveTrackToLoopIndex(row, loopIndex, animated=true) {
       const card = row.track.children[loopIndex];
       if (!card) return;
-
-      const cardLeft = card.offsetLeft;
+      const cardLeft  = card.offsetLeft;
       const cardRight = cardLeft + card.offsetWidth;
-      const currentShift = getCurrentTranslateX(row.track);
-      const visibleLeft = -currentShift;
-      const visibleRight = visibleLeft + row.wrap.clientWidth;
+      const curShift  = getCurrentTranslateX(row.track);
+      const visLeft   = -curShift;
+      const visRight  = visLeft + row.wrap.clientWidth;
+      let newShift    = curShift;
 
-      const leftMargin = 140;
-      const rightMargin = 220;
-      let newShift = currentShift;
-
-      if (cardLeft < visibleLeft + leftMargin) {
-        newShift = -(cardLeft - leftMargin);
-      } else if (cardRight > visibleRight - rightMargin) {
-        newShift = -(cardRight - row.wrap.clientWidth + rightMargin);
-      }
+      if (cardLeft  < visLeft  + 140) newShift = -(cardLeft  - 140);
+      if (cardRight > visRight - 220) newShift = -(cardRight - row.wrap.clientWidth + 220);
 
       const maxShift = -(row.track.scrollWidth - row.wrap.clientWidth);
-      if (row.track.scrollWidth <= row.wrap.clientWidth) {
-        newShift = 0;
-      } else {
-        newShift = Math.max(maxShift, Math.min(0, newShift));
-      }
+      newShift = row.track.scrollWidth <= row.wrap.clientWidth
+        ? 0 : Math.max(maxShift, Math.min(0, newShift));
 
-      row.track.style.transition = animated
-        ? "transform .55s cubic-bezier(.2,.7,.2,1)"
-        : "none";
-
-      row.track.style.transform = `translateX(${newShift}px)`;
-
-      if (!animated) {
-        requestAnimationFrame(() => {
-          row.track.style.transition = "transform .55s cubic-bezier(.2,.7,.2,1)";
-        });
-      }
+      row.track.style.transition = animated ? "transform .55s cubic-bezier(.2,.7,.2,1)" : "none";
+      row.track.style.transform  = `translateX(${newShift}px)`;
+      if (!animated) requestAnimationFrame(() => {
+        row.track.style.transition = "transform .55s cubic-bezier(.2,.7,.2,1)";
+      });
     }
 
-    function jumpTrackToLoopIndex(row, loopIndex) {
-      moveTrackToLoopIndex(row, loopIndex, false);
-    }
+    function jumpTrackToLoopIndex(row, li) { moveTrackToLoopIndex(row, li, false); }
 
     function normalizeLoopPosition(rowIndex) {
       const row = rows[rowIndex];
-      const realLength = row.movies.length;
-      let loopIndex = focusedLoopCol[rowIndex];
-
-      if (loopIndex < LOOP_PAD) {
-        loopIndex += realLength;
-        focusedLoopCol[rowIndex] = loopIndex;
-        jumpTrackToLoopIndex(row, loopIndex);
-      } else if (loopIndex >= LOOP_PAD + realLength) {
-        loopIndex -= realLength;
-        focusedLoopCol[rowIndex] = loopIndex;
-        jumpTrackToLoopIndex(row, loopIndex);
+      const len = row.movies.length;
+      let li = focusedLoopCol[rowIndex];
+      if (li < LOOP_PAD) {
+        li += len; focusedLoopCol[rowIndex] = li; jumpTrackToLoopIndex(row, li);
+      } else if (li >= LOOP_PAD + len) {
+        li -= len; focusedLoopCol[rowIndex] = li; jumpTrackToLoopIndex(row, li);
       }
-
-      focusedCol[rowIndex] = getRealIndex(focusedLoopCol[rowIndex], realLength);
+      focusedCol[rowIndex] = getRealIndex(focusedLoopCol[rowIndex], len);
     }
 
-    function stopHeroPreview() {
-      clearTimeout(previewTimer);
-      previewTimer = null;
-      previewMovieId = null;
-      const heroVideo = document.getElementById("hero-video");
-      heroVideo.classList.remove("playing");
-      heroVideo.innerHTML = "";
+    function applyFocus(scrollIntoView=true) {
+      document.querySelectorAll(".card.focused").forEach(el => el.classList.remove("focused"));
+      document.querySelectorAll(".row.active").forEach(el => el.classList.remove("active"));
+
+      const row = rows[focusedRow];
+      if (!row?.loopedMovies?.length) return;
+      if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
+
+      const li   = focusedLoopCol[focusedRow];
+      const card = row.track.children[li];
+      if (!card) return;
+
+      row.section.classList.add("active");
+      card.classList.add("focused");
+      moveTrackToLoopIndex(row, li, true);
+      normalizeLoopPosition(focusedRow);
+
+      const movie = row.movies[focusedCol[focusedRow]];
+      if (movie) updateHero(movie, row.lane);
+
+      if (scrollIntoView) row.section.scrollIntoView({ behavior:"smooth", block:"nearest" });
+      maybeLoadMore(focusedRow);
     }
 
-    function scheduleHeroPreview(movieId) {
-      stopHeroPreview();
-      previewMovieId = movieId;
-
-      previewTimer = setTimeout(async () => {
-        try {
-          if (detailOpen || previewMovieId !== movieId) return;
-          const full = await fetchMovie(movieId);
-          if (previewMovieId !== movieId) return;
-
-          const clip = pickTrailer(full);
-          if (!clip) return;
-
-          const heroVideo = document.getElementById("hero-video");
-          heroVideo.innerHTML = `<iframe src="${clip.url}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-          heroVideo.classList.add("playing");
-        } catch (e) {
-          console.error(e);
-        }
-      }, PREVIEW_DELAY_MS);
-    }
-
+    // ── HERO UPDATE ───────────────────────────────────────────────
     async function updateHero(movie, lane) {
       document.getElementById("hero-eyebrow").textContent = lane.title;
-      document.getElementById("hero-title").textContent = movie.title || "Untitled";
-      document.getElementById("hero-sub").textContent = movie.overview || lane.subtitle;
+      document.getElementById("hero-title").textContent   = movie.title || "Untitled";
+      document.getElementById("hero-sub").textContent     = movie.overview || lane.subtitle;
 
       document.getElementById("hero-meta").innerHTML = `
         <span class="pill gold">${voteText(movie)}</span>
         <span class="pill">${safeYear(movie)}</span>
         <span class="pill">${lane.subtitle}</span>
       `;
-
       document.getElementById("hero-tags").innerHTML = `
         <span class="pill">${makeReasonText(lane)}</span>
         <span class="pill">${bestForText(lane)}</span>
@@ -1222,17 +803,14 @@
 
       const backPath = movie.backdrop_path || movie.poster_path;
       if (backPath) {
-        const bgUrl = BACK(backPath, "w1280");
-        setAmbient(bgUrl);
-        setHeroImage(bgUrl);
+        const url = BACK(backPath,"w1280");
+        setAmbient(url);
+        document.getElementById("hero-image").style.backgroundImage = `url("${url}")`;
       }
 
       currentHeroTrailer = null;
       const heroTrailerBtn = document.getElementById("hero-trailer");
       heroTrailerBtn.style.display = "none";
-      heroTrailerBtn.textContent = "Watch trailer";
-
-      stopHeroPreview();
 
       try {
         const full = await fetchMovie(movie.id);
@@ -1242,83 +820,80 @@
           heroTrailerBtn.style.display = "inline-flex";
           heroTrailerBtn.textContent = `Watch ${trailer.label.toLowerCase()}`;
         }
-      } catch (e) {
-        console.error(e);
-      }
-
-      scheduleHeroPreview(movie.id);
+      } catch(e) {}
     }
 
-    function openVideoOverlay(url) {
-      if (!url) return;
-      stopHeroPreview();
-      const overlay = document.getElementById("video-overlay");
-      const frame = document.getElementById("video-frame");
-      frame.src = url;
-      overlay.classList.add("open");
+    // ── LOAD MORE ─────────────────────────────────────────────────
+    async function maybeLoadMore(rowIndex) {
+      const row = rows[rowIndex];
+      if (!row || row.loadingMore || row.movies.length >= MAX_MOVIES_PER_ROW) return;
+      if ((focusedCol[rowIndex]||0) < row.movies.length - 12) return;
+
+      row.loadingMore = true;
+      try {
+        const next  = row.page + 1;
+        const pages = await Promise.all([fetchLanePage(row.lane.key,next), fetchLanePage(row.lane.key,next+1)]);
+        const fresh = pages.flat().filter(m => !new Set(row.movies.map(x=>x.id)).has(m.id));
+        if (fresh.length) {
+          row.movies.push(...fresh);
+          row.page = next + 1;
+          rebuildRow(row, rowIndex);
+          const currentReal = focusedCol[rowIndex] || 0;
+          focusedLoopCol[rowIndex] = currentReal + LOOP_PAD;
+          jumpTrackToLoopIndex(row, focusedLoopCol[rowIndex]);
+          applyFocus(false);
+        }
+      } catch(e) { console.error(e); }
+      finally { row.loadingMore = false; }
     }
 
-    function closeVideoOverlay() {
-      const overlay = document.getElementById("video-overlay");
-      const frame = document.getElementById("video-frame");
-      frame.src = "";
-      overlay.classList.remove("open");
-    }
-
+    // ── DETAIL PANEL ──────────────────────────────────────────────
     async function openDetailFromFocus() {
       const movie = currentMovie();
-      const row = rows[focusedRow];
+      const row   = rows[focusedRow];
       if (!movie || !row) return;
 
+      detailOpen = true;
+      document.getElementById("detail").classList.add("open");
+      document.getElementById("detail-title").textContent = "Loading…";
+      ["detail-tagline","detail-overview"].forEach(id => document.getElementById(id).textContent="");
+      ["detail-pills","detail-cast"].forEach(id => document.getElementById(id).innerHTML="");
+      document.getElementById("detail-backdrop").src = "";
+      document.getElementById("detail-trailer").style.display = "none";
+      currentDetailTrailer = null;
+
       try {
-        detailOpen = true;
-        stopHeroPreview();
-        document.getElementById("detail").classList.add("open");
-
-        document.getElementById("detail-title").textContent = "Loading...";
-        document.getElementById("detail-tagline").textContent = "";
-        document.getElementById("detail-pills").innerHTML = "";
-        document.getElementById("detail-overview").textContent = "";
-        document.getElementById("detail-cast").innerHTML = "";
-        document.getElementById("detail-backdrop").src = "";
-        document.getElementById("detail-trailer").style.display = "none";
-        currentDetailTrailer = null;
-
         const full = await fetchMovie(movie.id);
-
-        document.getElementById("detail-title").textContent = full.title || movie.title || "Untitled";
+        document.getElementById("detail-title").textContent   = full.title || movie.title || "Untitled";
         document.getElementById("detail-tagline").textContent = full.tagline || row.lane.subtitle || "";
         document.getElementById("detail-pills").innerHTML = `
           <span class="pill gold">${voteText(full)}</span>
           <span class="pill">${safeYear(full)}</span>
           <span class="pill">${runtimeText(full.runtime)}</span>
-          <span class="pill">${full.vote_count ? `${full.vote_count.toLocaleString()} votes` : "Votes unavailable"}</span>
+          <span class="pill">${full.vote_count ? full.vote_count.toLocaleString()+" votes" : "Votes unavailable"}</span>
         `;
-
-        document.getElementById("reason-fit").textContent = makeReasonText(row.lane);
+        document.getElementById("reason-fit").textContent    = makeReasonText(row.lane);
         document.getElementById("reason-bestfor").textContent = bestForText(row.lane);
-        document.getElementById("reason-commit").textContent = commitmentText(full);
+        document.getElementById("reason-commit").textContent  = commitmentText(full);
         document.getElementById("detail-overview").textContent = full.overview || "No synopsis available.";
 
-        const cast = (full.credits && Array.isArray(full.credits.cast)) ? full.credits.cast.slice(0, 8) : [];
+        const cast = full.credits?.cast?.slice(0,8) || [];
         document.getElementById("detail-cast").innerHTML = cast.length
-          ? cast.map(person => `<div class="cast-chip">${escapeHtml(person.name)}${person.character ? ` · ${escapeHtml(person.character)}` : ""}</div>`).join("")
+          ? cast.map(p => `<div class="cast-chip">${escapeHtml(p.name)}${p.character ? ` · ${escapeHtml(p.character)}` : ""}</div>`).join("")
           : `<div class="cast-chip">Cast unavailable</div>`;
 
         const backdropPath = full.backdrop_path || full.poster_path;
-        if (backdropPath) {
-          document.getElementById("detail-backdrop").src = BACK(backdropPath, "w1280");
-        }
+        if (backdropPath) document.getElementById("detail-backdrop").src = BACK(backdropPath,"w1280");
 
         const trailer = pickTrailer(full);
         if (trailer) {
           currentDetailTrailer = trailer;
           const btn = document.getElementById("detail-trailer");
           btn.style.display = "inline-flex";
-          btn.textContent = `Watch ${trailer.label.toLowerCase()}`;
+          btn.textContent   = `Watch ${trailer.label.toLowerCase()}`;
         }
-      } catch (err) {
-        console.error(err);
+      } catch(e) {
+        console.error(e);
         showToast("Could not load movie details");
       }
     }
@@ -1326,45 +901,82 @@
     function closeDetail() {
       detailOpen = false;
       document.getElementById("detail").classList.remove("open");
-      const movie = currentMovie();
-      if (movie) scheduleHeroPreview(movie.id);
     }
 
-    function applyFocus(scrollIntoView = true) {
-      document.querySelectorAll(".card.focused").forEach(el => el.classList.remove("focused"));
-      document.querySelectorAll(".row.active").forEach(el => el.classList.remove("active"));
-
-      const row = rows[focusedRow];
-      if (!row || !row.loopedMovies?.length) return;
-
-      if (focusedLoopCol[focusedRow] == null) {
-        focusedLoopCol[focusedRow] = LOOP_PAD;
-      }
-
-      const loopIndex = focusedLoopCol[focusedRow];
-      const card = row.track.children[loopIndex];
-      if (!card) return;
-
-      row.section.classList.add("active");
-      card.classList.add("focused");
-
-      moveTrackToLoopIndex(row, loopIndex, true);
-      normalizeLoopPosition(focusedRow);
-
-      const realIndex = focusedCol[focusedRow];
-      const movie = row.movies[realIndex];
-      if (movie) updateHero(movie, row.lane);
-
-      if (scrollIntoView) {
-        row.section.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-
-      maybeLoadMore(focusedRow);
+    // ── VIDEO OVERLAY ─────────────────────────────────────────────
+    function openVideoOverlay(url) {
+      if (!url) return;
+      document.getElementById("video-frame").src = url;
+      document.getElementById("video-overlay").classList.add("open");
     }
 
+    function closeVideoOverlay() {
+      document.getElementById("video-frame").src = "";
+      document.getElementById("video-overlay").classList.remove("open");
+    }
+
+    // ── KEYBOARD ──────────────────────────────────────────────────
+    document.addEventListener("keydown", e => {
+      if (document.getElementById("video-overlay").classList.contains("open")) {
+        if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); closeVideoOverlay(); }
+        return;
+      }
+      if (detailOpen) {
+        if (e.key === "Escape" || e.key === "Backspace") { e.preventDefault(); closeDetail(); }
+        return;
+      }
+      if (!rows.length) return;
+
+      switch(e.key) {
+        case "ArrowRight":
+          e.preventDefault();
+          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow]||LOOP_PAD) + 1;
+          applyFocus(false); break;
+        case "ArrowLeft":
+          e.preventDefault();
+          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow]||LOOP_PAD) - 1;
+          applyFocus(false); break;
+        case "ArrowDown":
+          e.preventDefault();
+          focusedRow = (focusedRow + 1) % rows.length;
+          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
+          applyFocus(true); break;
+        case "ArrowUp":
+          e.preventDefault();
+          focusedRow = (focusedRow - 1 + rows.length) % rows.length;
+          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
+          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
+          applyFocus(true); break;
+        case "Enter":
+          e.preventDefault();
+          openDetailFromFocus(); break;
+      }
+    });
+
+    // ── BUTTON WIRING ─────────────────────────────────────────────
+    document.getElementById("detail-close").addEventListener("click", closeDetail);
+    document.getElementById("detail").addEventListener("click", e => { if (e.target.id==="detail") closeDetail(); });
+    document.getElementById("hero-open").addEventListener("click", openDetailFromFocus);
+    document.getElementById("hero-next").addEventListener("click", () => {
+      focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow]||LOOP_PAD) + 1;
+      applyFocus(false);
+    });
+    document.getElementById("hero-trailer").addEventListener("click", () => {
+      if (currentHeroTrailer?.url) openVideoOverlay(currentHeroTrailer.url);
+    });
+    document.getElementById("detail-trailer").addEventListener("click", () => {
+      if (currentDetailTrailer?.url) openVideoOverlay(currentDetailTrailer.url);
+    });
+    document.getElementById("video-close").addEventListener("click", closeVideoOverlay);
+    document.getElementById("video-overlay").addEventListener("click", e => {
+      if (e.target.id==="video-overlay") closeVideoOverlay();
+    });
+
+    // ── INIT ──────────────────────────────────────────────────────
     async function init() {
       try {
-        statusEl.textContent = "Loading curated lanes...";
+        statusEl.textContent = "Loading curated lanes…";
         rowsEl.innerHTML = "";
 
         const laneResults = await Promise.all(
@@ -1375,112 +987,21 @@
         );
 
         rows = laneResults
-          .filter(x => x.movies && x.movies.length)
-          .map((x, i) => buildRow(x.lane, x.movies, i));
+          .filter(x => x.movies?.length)
+          .map((x,i) => buildRow(x.lane, x.movies, i));
 
-        if (!rows.length) {
-          statusEl.textContent = "No movies could be loaded.";
-          return;
-        }
+        if (!rows.length) { statusEl.textContent = "No movies could be loaded."; return; }
 
-        focusedRow = 0;
-        focusedCol = { 0: 0 };
-        focusedLoopCol = { 0: LOOP_PAD };
+        focusedRow     = 0;
+        focusedCol     = { 0:0 };
+        focusedLoopCol = { 0:LOOP_PAD };
         applyFocus(false);
         statusEl.textContent = "";
-      } catch (err) {
+      } catch(err) {
         console.error(err);
-        statusEl.className = "error";
-        statusEl.textContent = "Could not load data from the Worker. Check the Worker code, TMDB key, and CORS settings.";
+        statusEl.textContent = "Could not load data. Check the worker URL and CORS settings.";
       }
     }
-
-    document.addEventListener("keydown", (e) => {
-      const videoOpen = document.getElementById("video-overlay").classList.contains("open");
-
-      if (videoOpen) {
-        if (e.key === "Escape" || e.key === "Backspace") {
-          e.preventDefault();
-          closeVideoOverlay();
-        }
-        return;
-      }
-
-      if (detailOpen) {
-        if (e.key === "Escape" || e.key === "Backspace") {
-          e.preventDefault();
-          closeDetail();
-        }
-        return;
-      }
-
-      if (!rows.length) return;
-      const row = rows[focusedRow];
-
-      switch (e.key) {
-        case "ArrowRight":
-          e.preventDefault();
-          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow] || LOOP_PAD) + 1;
-          applyFocus(false);
-          break;
-
-        case "ArrowLeft":
-          e.preventDefault();
-          focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow] || LOOP_PAD) - 1;
-          applyFocus(false);
-          break;
-
-        case "ArrowDown":
-          e.preventDefault();
-          focusedRow = (focusedRow + 1) % rows.length;
-          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
-          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
-          applyFocus(true);
-          break;
-
-        case "ArrowUp":
-          e.preventDefault();
-          focusedRow = (focusedRow - 1 + rows.length) % rows.length;
-          if (focusedCol[focusedRow] == null) focusedCol[focusedRow] = 0;
-          if (focusedLoopCol[focusedRow] == null) focusedLoopCol[focusedRow] = LOOP_PAD;
-          applyFocus(true);
-          break;
-
-        case "Enter":
-          e.preventDefault();
-          openDetailFromFocus();
-          break;
-      }
-    });
-
-    document.getElementById("detail-close").addEventListener("click", closeDetail);
-    document.getElementById("detail").addEventListener("click", (e) => {
-      if (e.target.id === "detail") closeDetail();
-    });
-
-    document.getElementById("hero-open").addEventListener("click", openDetailFromFocus);
-
-    document.getElementById("hero-next").addEventListener("click", () => {
-      focusedLoopCol[focusedRow] = (focusedLoopCol[focusedRow] || LOOP_PAD) + 1;
-      applyFocus(false);
-    });
-
-    document.getElementById("hero-trailer").addEventListener("click", () => {
-      if (currentHeroTrailer && currentHeroTrailer.url) {
-        openVideoOverlay(currentHeroTrailer.url);
-      }
-    });
-
-    document.getElementById("detail-trailer").addEventListener("click", () => {
-      if (currentDetailTrailer && currentDetailTrailer.url) {
-        openVideoOverlay(currentDetailTrailer.url);
-      }
-    });
-
-    document.getElementById("video-close").addEventListener("click", closeVideoOverlay);
-    document.getElementById("video-overlay").addEventListener("click", (e) => {
-      if (e.target.id === "video-overlay") closeVideoOverlay();
-    });
 
     init();
   </script>
