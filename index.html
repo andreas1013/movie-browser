@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineView TV</title>
+  <style>
+    :root {
+      --bg: #05070d;
+      --panel: rgba(255,255,255,0.08);
+      --panel-2: rgba(255,255,255,0.12);
+      --line: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.96);
+      --muted: rgba(255,255,255,0.62);
+      --soft: rgba(255,255,255,0.34);
+      --gold: #ffd54a;
+      --focus: #ffffff;
+      --radius: 18px;
+      --rail-gap: 18px;
+      --card-w: min(28vw, 420px);
+      --card-h: calc(var(--card-w) * 0.58);
+      --safe-x: clamp(28px, 4vw, 72px);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+    body { overflow: hidden; }
+    #bgA, #bgB {
+      position: fixed; inset: -6vh; background-size: cover; background-position: center; filter: blur(70px) saturate(1.25) brightness(.38); transform: scale(1.08); transition: opacity .8s ease;
+    }
+    #bgB { opacity: 0; }
+    .overlay {
+      position: fixed; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,.06), transparent 65%),
+        linear-gradient(to bottom, rgba(5,7,13,.28), rgba(5,7,13,.75) 42%, rgba(5,7,13,.95));
+    }
+    .app { position: relative; z-index: 2; height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center; padding: 20px var(--safe-x) 12px; color: var(--soft);
+      letter-spacing: .12em; text-transform: uppercase; font-size: 12px;
+    }
+    .hero {
+      padding: 1vh var(--safe-x) 3vh; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr); gap: 32px; align-items: end;
+    }
+    .eyebrow { color: var(--soft); letter-spacing: .2em; text-transform: uppercase; font-size: 12px; margin-bottom: 12px; }
+    .title { font-size: clamp(42px, 5.6vw, 92px); line-height: .94; letter-spacing: -.04em; font-weight: 700; margin: 0 0 18px; max-width: 12ch; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+    .pill {
+      padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.08); font-size: 14px; color: var(--muted);
+    }
+    .pill.gold { color: var(--gold); border-color: rgba(255,213,74,.25); background: rgba(255,213,74,.08); }
+    .overview { color: var(--muted); font-size: clamp(15px, 1.5vw, 20px); line-height: 1.6; max-width: 52ch; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .decision {
+      align-self: center; justify-self: end; width: min(36vw, 520px); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 22px; padding: 24px;
+      backdrop-filter: blur(24px);
+    }
+    .decision h2 { margin: 0 0 8px; font-size: clamp(22px, 2.1vw, 34px); letter-spacing: -.03em; }
+    .decision p { margin: 0; color: var(--muted); line-height: 1.5; font-size: 15px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .chip { padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); background: rgba(255,255,255,.05); }
+    .viewport {
+      overflow: hidden auto; padding: 0 0 44px; scroll-behavior: smooth; scrollbar-width: none;
+    }
+    .viewport::-webkit-scrollbar { display:none; }
+    .rail-section { margin-bottom: 22px; }
+    .rail-head { display:flex; align-items:center; justify-content:space-between; gap:20px; padding: 0 var(--safe-x) 12px; }
+    .rail-title { font-size: clamp(22px, 2.2vw, 34px); letter-spacing: -.03em; font-weight: 650; }
+    .rail-sub { color: var(--soft); font-size: 14px; }
+    .rail-wrap { overflow: hidden; padding: 4px var(--safe-x) 14px; }
+    .rail { display:flex; gap: var(--rail-gap); transition: transform .28s ease; will-change: transform; }
+    .card {
+      width: var(--card-w); flex: 0 0 var(--card-w); border-radius: var(--radius); overflow: hidden; background: var(--panel); border: 1px solid var(--line);
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    .card.focused {
+      transform: scale(1.08) translateY(-8px); border-color: rgba(255,255,255,.7); box-shadow: 0 18px 60px rgba(0,0,0,.55), 0 0 0 2px rgba(255,255,255,.28);
+      background: var(--panel-2);
+    }
+    .rail-section.active .card:not(.focused) { opacity: .58; }
+    .poster { position: relative; width: 100%; height: var(--card-h); object-fit: cover; display: block; background: rgba(255,255,255,.06); }
+    .poster::after { content:''; }
+    .card-body { padding: 14px 16px 16px; }
+    .card-title { font-size: clamp(18px, 1.5vw, 24px); letter-spacing: -.02em; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; }
+    .card-meta { display:flex; justify-content:space-between; color: var(--muted); font-size: 14px; }
+    .reason { margin-top: 10px; color: var(--soft); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .help { position: fixed; right: var(--safe-x); bottom: 18px; color: var(--soft); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+    .modal {
+      position: fixed; inset: 0; display:none; place-items:center; background: rgba(0,0,0,.68); backdrop-filter: blur(10px); z-index: 9;
+    }
+    .modal.open { display:grid; }
+    .panel {
+      width: min(1080px, 92vw); max-height: 88vh; overflow:auto; background: rgba(10,12,20,.92); border: 1px solid rgba(255,255,255,.12); border-radius: 24px;
+      box-shadow: 0 28px 100px rgba(0,0,0,.6);
+    }
+    .panel img { width:100%; aspect-ratio: 21/9; object-fit:cover; display:block; }
+    .panel-body { padding: 28px 34px 34px; }
+    .panel-body h3 { font-size: 40px; line-height: 1; letter-spacing: -.04em; margin: 0 0 10px; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 320px; gap: 30px; }
+    .choices { display:grid; gap: 12px; }
+    .choice { padding: 14px 16px; border:1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.04); }
+    .choice strong { display:block; margin-bottom: 6px; }
+    @media (max-width: 980px) {
+      body { overflow:auto; }
+      .hero { grid-template-columns: 1fr; }
+      .decision { justify-self:stretch; width:auto; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="bgA"></div>
+  <div id="bgB"></div>
+  <div class="overlay"></div>
+
+  <div class="app">
+    <div class="topbar">
+      <div>CineView TV</div>
+      <div>TV-first movie discovery</div>
+    </div>
+
+    <div class="viewport" id="viewport">
+      <section class="hero">
+        <div>
+          <div class="eyebrow" id="heroLabel">Best pick for tonight</div>
+          <h1 class="title" id="heroTitle">Loading…</h1>
+          <div class="meta" id="heroMeta"></div>
+          <div class="overview" id="heroOverview"></div>
+        </div>
+        <aside class="decision">
+          <h2 id="decisionTitle">Make browsing feel like choosing</h2>
+          <p id="decisionCopy">This TV layout leads with intent, not genres. It starts with one strong recommendation, then gives a few meaningful paths instead of endless rows.</p>
+          <div class="chips" id="decisionChips"></div>
+        </aside>
+      </section>
+
+      <main id="rails"></main>
+    </div>
+  </div>
+
+  <div class="help">↑↓ rows &nbsp; ←→ browse &nbsp; Enter details &nbsp; Esc close</div>
+
+  <div class="modal" id="modal">
+    <div class="panel">
+      <img id="modalImg" alt="">
+      <div class="panel-body">
+        <div class="grid-2">
+          <div>
+            <h3 id="modalTitle"></h3>
+            <div class="meta" id="modalMeta"></div>
+            <p class="overview" style="display:block;max-width:none;-webkit-line-clamp:unset" id="modalOverview"></p>
+          </div>
+          <div>
+            <div class="eyebrow">Why it fits now</div>
+            <div class="choices" id="modalChoices"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API_BASE = "https://REPLACE_WITH_WORKER_URL";
+const IMG = (p, size='w780') => p ? `https://image.tmdb.org/t/p/${size}${p}` : '';
+const BACK = (p, size='w1280') => p ? `https://image.tmdb.org/t/p/${size}${p}` : '';
+
+const INTENTS = [
+  {
+    key: 'tonight',
+    title: 'Best pick for tonight',
+    subtitle: 'A strong, accessible recommendation to start fast',
+    endpoint: '/api/intent/tonight',
+    choices: ['Strong first choice', 'Accessible but high quality', 'Works well on a relaxed evening']
+  },
+  {
+    key: 'short',
+    title: 'Under 100 minutes',
+    subtitle: 'Low-commitment films that still feel worth it',
+    endpoint: '/api/intent/short',
+    choices: ['Easy to finish tonight', 'Good pacing', 'Less browsing, more watching']
+  },
+  {
+    key: 'beautiful',
+    title: 'Slow and beautiful',
+    subtitle: 'Visually rich films with a calmer rhythm',
+    endpoint: '/api/intent/beautiful',
+    choices: ['Visual mood first', 'Better for quieter nights', 'Great when you want atmosphere']
+  },
+  {
+    key: 'tense',
+    title: 'High-stakes thrill',
+    subtitle: 'Tense, propulsive films with momentum',
+    endpoint: '/api/intent/tense',
+    choices: ['Fast energy', 'Clear hook', 'Good group-watch option']
+  }
+];
+
+const state = {
+  rails: [],
+  row: 0,
+  colByRow: {},
+  detailsCache: new Map(),
+  bgUrl: '',
+  modalOpen: false,
+};
+
+async function api(path) {
+  const res = await fetch(API_BASE + path);
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+
+function reasonFor(movie, intentKey) {
+  const year = Number((movie.release_date || '').slice(0,4));
+  const score = movie.vote_average || 0;
+  if (intentKey === 'short') return (movie.runtime && movie.runtime <= 100) ? 'Short enough for tonight' : 'Feels brisk for a feature';
+  if (intentKey === 'beautiful') return score >= 7.2 ? 'Strong craft and atmosphere' : 'Mood-led visual pick';
+  if (intentKey === 'tense') return score >= 7 ? 'High momentum thriller energy' : 'Built for suspense';
+  if (year >= 2020) return 'Recent and easy to enter';
+  return 'Reliable first recommendation';
+}
+
+function setBg(url) {
+  if (!url || url === state.bgUrl) return;
+  state.bgUrl = url;
+  const a = document.getElementById('bgA');
+  const b = document.getElementById('bgB');
+  b.style.backgroundImage = `url(${url})`;
+  b.style.opacity = '1';
+  setTimeout(() => {
+    a.style.backgroundImage = `url(${url})`;
+    b.style.opacity = '0';
+  }, 750);
+}
+
+function renderHero(movie, rail) {
+  document.getElementById('heroLabel').textContent = rail.title;
+  document.getElementById('heroTitle').textContent = movie.title || 'Untitled';
+  document.getElementById('heroOverview').textContent = movie.overview || 'No overview available.';
+  document.getElementById('decisionTitle').textContent = rail.title;
+  document.getElementById('decisionCopy').textContent = rail.subtitle;
+  document.getElementById('decisionChips').innerHTML = rail.choices.map(c => `<span class="chip">${c}</span>`).join('');
+  document.getElementById('heroMeta').innerHTML = [
+    `<span class="pill gold">★ ${(movie.vote_average || 0).toFixed(1)}</span>`,
+    `<span class="pill">${(movie.release_date || '').slice(0,4) || '—'}</span>`,
+    movie.runtime ? `<span class="pill">${movie.runtime} min</span>` : ''
+  ].join('');
+  setBg(BACK(movie.backdrop_path));
+}
+
+function createCard(movie, intentKey) {
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.innerHTML = `
+    <img class="poster" src="${IMG(movie.backdrop_path) || IMG(movie.poster_path, 'w500')}" alt="">
+    <div class="card-body">
+      <div class="card-title">${movie.title}</div>
+      <div class="card-meta"><span>${(movie.release_date || '').slice(0,4) || '—'}</span><span>★ ${(movie.vote_average || 0).toFixed(1)}</span></div>
+      <div class="reason">${reasonFor(movie, intentKey)}</div>
+    </div>`;
+  return el;
+}
+
+function renderRails() {
+  const root = document.getElementById('rails');
+  root.innerHTML = '';
+  state.rails.forEach((rail, ri) => {
+    const section = document.createElement('section');
+    section.className = 'rail-section';
+    section.innerHTML = `
+      <div class="rail-head">
+        <div>
+          <div class="rail-title">${rail.title}</div>
+          <div class="rail-sub">${rail.subtitle}</div>
+        </div>
+        <div class="rail-sub">${rail.movies.length} options</div>
+      </div>
+      <div class="rail-wrap"><div class="rail"></div></div>`;
+
+    const railEl = section.querySelector('.rail');
+    rail.movies.forEach(m => railEl.appendChild(createCard(m, rail.key)));
+    rail.trackEl = railEl;
+    rail.sectionEl = section;
+    rail.wrapEl = section.querySelector('.rail-wrap');
+    root.appendChild(section);
+  });
+}
+
+function applyFocus(scrollSection=true) {
+  document.querySelectorAll('.card.focused').forEach(el => el.classList.remove('focused'));
+  document.querySelectorAll('.rail-section.active').forEach(el => el.classList.remove('active'));
+  const rail = state.rails[state.row];
+  if (!rail) return;
+  const col = Math.max(0, Math.min(state.colByRow[state.row] || 0, rail.movies.length - 1));
+  state.colByRow[state.row] = col;
+  const card = rail.trackEl.children[col];
+  if (card) card.classList.add('focused');
+  rail.sectionEl.classList.add('active');
+
+  const offset = Math.max(0, col * (card.offsetWidth + 18) - rail.wrapEl.clientWidth * 0.22);
+  rail.trackEl.style.transform = `translateX(-${offset}px)`;
+  const movie = rail.movies[col];
+  renderHero(movie, rail);
+  if (scrollSection) rail.sectionEl.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+async function openModal() {
+  const rail = state.rails[state.row];
+  const movie = rail.movies[state.colByRow[state.row] || 0];
+  let full = state.detailsCache.get(movie.id);
+  if (!full) {
+    full = await api(`/api/movie/${movie.id}`);
+    state.detailsCache.set(movie.id, full);
+  }
+  document.getElementById('modalImg').src = BACK(full.backdrop_path) || IMG(full.poster_path);
+  document.getElementById('modalTitle').textContent = full.title;
+  document.getElementById('modalOverview').textContent = full.overview || 'No overview available.';
+  document.getElementById('modalMeta').innerHTML = [
+    `<span class="pill gold">★ ${(full.vote_average || 0).toFixed(1)}</span>`,
+    `<span class="pill">${(full.release_date || '').slice(0,4) || '—'}</span>`,
+    full.runtime ? `<span class="pill">${full.runtime} min</span>` : '',
+    full.vote_count ? `<span class="pill">${full.vote_count.toLocaleString()} votes</span>` : ''
+  ].join('');
+  document.getElementById('modalChoices').innerHTML = [
+    `Watch this if you want a ${rail.key === 'tense' ? 'tense, energetic' : rail.key === 'beautiful' ? 'visually rich, quieter' : rail.key === 'short' ? 'short, easy' : 'well-rounded'} film tonight.`,
+    `Best for ${rail.subtitle.toLowerCase()}.`,
+    `If not this, move sideways in the same row for a nearby alternative.`
+  ].map(t => `<div class="choice"><strong>Decision note</strong>${t}</div>`).join('');
+  state.modalOpen = true;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  state.modalOpen = false;
+  document.getElementById('modal').classList.remove('open');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (state.modalOpen) {
+    if (e.key === 'Escape' || e.key === 'Backspace') closeModal();
+    return;
+  }
+  const rail = state.rails[state.row];
+  if (!rail) return;
+  const col = state.colByRow[state.row] || 0;
+  if (e.key === 'ArrowDown') { e.preventDefault(); if (state.row < state.rails.length - 1) state.row++; applyFocus(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); if (state.row > 0) state.row--; applyFocus(); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); if (col < rail.movies.length - 1) state.colByRow[state.row] = col + 1; applyFocus(false); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); if (col > 0) state.colByRow[state.row] = col - 1; applyFocus(false); }
+  if (e.key === 'Enter') { e.preventDefault(); openModal(); }
+});
+document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+
+async function init() {
+  const rails = await Promise.all(INTENTS.map(async intent => {
+    const payload = await api(intent.endpoint);
+    const movies = payload.results || [];
+    const enriched = await Promise.all(movies.slice(0, 12).map(async m => {
+      if (m.runtime) return m;
+      try {
+        const full = await api(`/api/movie/${m.id}`);
+        return {...m, runtime: full.runtime};
+      } catch { return m; }
+    }));
+    return {...intent, movies: enriched};
+  }));
+  state.rails = rails;
+  state.colByRow = Object.fromEntries(rails.map((_, i) => [i, 0]));
+  renderRails();
+  applyFocus(false);
+}
+init().catch(err => {
+  document.getElementById('heroTitle').textContent = 'Setup required';
+  document.getElementById('heroOverview').textContent = 'Set your Cloudflare Worker URL in index.html and deploy the Worker with a TMDB secret.';
+  console.error(err);
+});
+</script>
+</body>
+</html>
